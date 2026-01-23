@@ -186,3 +186,53 @@ select:focus {
   transform: translateY(-5px);
   box-shadow: 0 10px 20px rgba(0,0,0,.15);
 }
+/* =====================
+   TABLET & HP BESAR
+===================== */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 20px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}
+
+/* =====================
+   HP NORMAL
+===================== */
+@media (max-width: 576px) {
+  .content {
+    padding: 16px;
+  }
+
+  input,
+  select,
+  textarea,
+  button {
+    width: 100%;
+    font-size: 14px;
+  }
+}
+
+/* =====================
+   HP KECIL
+===================== */
+@media (max-width: 360px) {
+  .content {
+    padding: 12px;
+  }
+
+  h1, h2, h3 {
+    font-size: 16px;
+  }
+
+  button {
+    padding: 10px;
+    font-size: 13px;
+  }
+}
