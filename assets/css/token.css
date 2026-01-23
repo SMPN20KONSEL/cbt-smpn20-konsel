@@ -1,0 +1,173 @@
+/* =====================================================
+   RESET
+===================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* =====================================================
+   BODY
+===================================================== */
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: linear-gradient(135deg, #6a11cb, #2575fc);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px; /* penting untuk HP kecil */
+  color: #333;
+}
+
+/* =====================================================
+   LOGIN BOX
+===================================================== */
+.login-box {
+  width: 100%;
+  max-width: 360px; /* lebih aman untuk HP kecil */
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 30px 22px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+/* =====================================================
+   LOGO (KIRI + 2 BARIS)
+===================================================== */
+.login-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.login-logo img {
+  width: 46px;
+  height: 46px;
+  object-fit: contain;
+}
+
+.login-logo div {
+  text-align: left;
+  line-height: 1.25;
+}
+
+.login-logo strong {
+  font-size: 15px;
+  color: #1e4f8c;
+  font-weight: 700;
+}
+
+.login-logo span {
+  font-size: 11px;
+  color: #5f7fa3;
+}
+
+/* =====================================================
+   JUDUL & DESKRIPSI
+===================================================== */
+.login-box h2 {
+  font-size: 17px;
+  margin-bottom: 6px;
+  font-weight: 600;
+  color: #333;
+}
+
+.login-box p {
+  font-size: 12.5px;
+  margin-bottom: 18px;
+  color: #666;
+}
+
+/* =====================================================
+   INPUT
+===================================================== */
+input {
+  width: 100%;
+  padding: 11px 14px;
+  font-size: 15px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  margin-bottom: 14px;
+}
+
+input:focus {
+  outline: none;
+  border-color: #2575fc;
+}
+
+/* =====================================================
+   BUTTON
+===================================================== */
+button {
+  width: 100%;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  background: #2575fc;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* =====================================================
+   ERROR
+===================================================== */
+#error {
+  margin-top: 12px;
+  font-size: 13px;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+/* =====================================================
+   FOOTER
+===================================================== */
+.footer-text {
+  margin-top: 18px;
+  font-size: 11px;
+  color: #888;
+}
+
+/* =====================================================
+   EXTRA SMALL DEVICE (≤360px)
+===================================================== */
+@media (max-width: 360px) {
+  .login-box {
+    padding: 25px 18px;
+  }
+
+  .login-logo img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .login-logo strong {
+    font-size: 14px;
+  }
+
+  .login-logo span {
+    font-size: 10px;
+  }
+
+  h2 {
+    font-size: 16px;
+  }
+
+  p {
+    font-size: 12px;
+  }
+
+  input,
+  button {
+    font-size: 14px;
+  }
+}

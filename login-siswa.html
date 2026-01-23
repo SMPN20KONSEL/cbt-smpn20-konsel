@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Login Siswa</title>
+  
+  <link rel="stylesheet" href="../assets/css/login.css">
+</head>
+
+<body>
+<div class="login-box">
+
+  <div class="login-logo">
+    <img src="../assets/img/logo-sekolah.png" alt="Logo">
+    <div>
+      <strong>SMPN 20 KONAWE SELATAN</strong>
+      <span>CBT Application</span>
+    </div>
+  </div>
+
+  <h2>Selamat Datang</h2>
+  <p>Silakan login menggunakan akun yang diberikan sekolah</p>
+
+  <!-- EMAIL / USERNAME -->
+  <div class="input-group">
+    <i>👤</i>
+    <input
+      type="text"
+      id="email"
+      placeholder="Username / Email"
+      autocomplete="username"
+    >
+  </div>
+
+  <!-- PASSWORD -->
+  <div class="input-group">
+    <i>🔒</i>
+    <input
+      type="password"
+      id="password"
+      placeholder="Password"
+      autocomplete="current-password"
+    >
+    <span class="toggle-password" id="togglePassword">👁</span>
+  </div>
+
+  <!-- BUTTON LOGIN -->
+  <button id="btnLogin" type="button">Login</button>
+
+  <div id="error"></div>
+  <div class="footer-text">© CBT Application</div>
+
+</div>
+
+<!-- AUTO ISI EMAIL DARI NIS -->
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const nis = params.get("nis");
+
+  if (nis) {
+    const emailInput = document.getElementById("email");
+    if (emailInput) {
+      emailInput.value = nis + "@smpn20.sch.id";
+    }
+  }
+</script>
+
+<!-- LOGIN JS -->
+<script type="module" src="../assets/js/login-siswa.js"></script>
+</body>
+</html>

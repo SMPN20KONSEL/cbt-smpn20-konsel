@@ -1,0 +1,156 @@
+/* ================= RESET ================= */
+* {
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #2c6aa3, #3b6fa1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ================= BACKGROUND SHAPE ================= */
+body::before {
+  content: "";
+  position: fixed;
+  top: -120px;
+  left: -120px;
+  width: 60%;
+  height: 60%;
+  background: rgba(93, 164, 245, 0.08);
+  transform: rotate(-12deg);
+  border-radius: 40px;
+}
+
+/* ================= LOGIN BOX ================= */
+.login-box {
+  width: 380px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  padding: 35px 30px 30px;
+  text-align: center;
+  position: relative;
+  z-index: 1;
+}
+
+/* ================= LOGO ================= */
+.login-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.login-logo img {
+  width: 42px;
+  height: 42px;
+}
+
+.login-logo div {
+  text-align: left;
+}
+
+.login-logo strong {
+  display: block;
+  font-size: 18px;
+  color: #1e4f8c;
+  letter-spacing: 0.5px;
+}
+
+.login-logo span {
+  font-size: 12px;
+  color: #5f7fa3;
+}
+
+/* ================= TEXT ================= */
+h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #444;
+}
+
+p {
+  margin: 8px 0 25px;
+  font-size: 14px;
+  color: #777;
+}
+
+/* ================= INPUT ================= */
+.input-group {
+  position: relative;
+  margin-bottom: 18px;
+}
+
+.input-group i {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: #9ca3af;
+  font-size: 15px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 12px 40px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: none;
+  border-bottom: 1px solid #cbd5e1;
+  outline: none;
+  transition: 0.3s;
+}
+
+.input-group input:focus {
+  border-bottom-color: #1e4f8c;
+}
+
+/* ================= TOGGLE PASSWORD ================= */
+.toggle-password {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  cursor: pointer;
+  color: #6b7280;
+  font-size: 14px;
+}
+
+/* ================= BUTTON ================= */
+button {
+  width: 100%;
+  padding: 13px;
+  margin-top: 10px;
+  border: none;
+  border-radius: 999px;
+  background: #0b78f6;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+button:hover {
+  background: #095fc4;
+}
+
+/* ================= ERROR ================= */
+#error {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #dc2626;
+}
+
+/* ================= FOOTER ================= */
+.footer-text {
+  margin-top: 25px;
+  font-size: 12px;
+  color: #9ca3af;
+}

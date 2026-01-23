@@ -1,0 +1,646 @@
+/* ===============================
+   LAYOUT UTAMA
+================================ */
+.dashboard {
+  display: flex;
+  min-height: 100vh;
+  background: #f4f6f9;
+}
+
+/* ===============================
+   SIDEBAR
+================================ */
+.sidebar {
+  position: fixed;        /* tetap saat scroll */
+  top: 0;
+  left: 0;
+  width: 260px;
+  height: 100vh;
+  background: #ffffff;    /* ubah ke putih jika mau */
+  color: #1e293b;         /* teks gelap untuk kontras */
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;       /* scroll sendiri jika menu panjang */
+  box-shadow: 2px 0 6px rgba(0,0,0,0.1);
+}
+
+.sidebar h2 {
+  text-align: center;
+  margin-bottom: 30px;
+  color: #1e293b;
+}
+
+.menu {
+  list-style: none;
+  padding: 0;
+  flex: 1;
+}
+
+.menu li {
+  margin-bottom: 12px;
+}
+
+.menu a {
+  display: flex;
+  align-items: center;
+  padding: 12px 15px;
+  border-radius: 10px;
+  color: #1e293b;
+  text-decoration: none;
+  transition: 0.3s;
+}
+
+.menu a i {
+  margin-right: 10px;
+}
+
+.menu a:hover,
+.menu a.active {
+  background: #f3f4f6;
+}
+
+.logout {
+  background: #ef4444;
+  border: none;
+  padding: 12px;
+  border-radius: 10px;
+  color: #fff;
+  cursor: pointer;
+}
+
+/* ===============================
+   CONTENT (DASHBOARD / SISWA / GURU)
+================================ */
+.content {
+  margin-left: 260px;         /* sejajar sidebar */
+  width: calc(100% - 260px);
+  padding: 40px;
+  background-color: #e0f2fe;  /* blok biru */
+  color: #020202;
+  border-radius: 16px 0 0 16px;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.content h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  background-color: #2563eb;  /* biru tua header */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.content .subtitle {
+  text-align: center;
+  color: rgba(2,2,2,0.85);
+  margin-bottom: 20px;
+}
+
+/* ===============================
+   CARDS / DASHBOARD ITEMS
+================================ */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 20px;
+}
+
+.card-box {
+  background: #fff;
+  color: #1e293b;
+  padding: 20px 24px;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  gap: 22px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card-box i {
+  font-size: 36px;
+  color: #2563eb;
+  min-width: 40px;
+}
+
+.card-box:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+.card-box.highlight {
+  background: linear-gradient(135deg, #2563eb, #1e40af);
+  color: #fff;
+}
+
+.card-box.highlight i,
+.card-box.highlight p {
+  color: #fff;
+}
+
+.card-text h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.card-text p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+/* ===============================
+   FORM & BUTTON
+================================ */
+.card label {
+  display: block;
+  margin-top: 10px;
+  font-weight: 600;
+}
+
+.card input {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+}
+
+.btn.primary {
+  margin-top: 16px;
+  background: #2563eb;
+  color: #fff;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn.primary:hover {
+  background: #1e40af;
+}
+
+.btn.danger {
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  padding: 8px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+/* ===============================
+   TABEL UMUM & SISWA / GURU
+================================ */
+.table,
+.tabel-siswa {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td,
+.tabel-siswa th,
+.tabel-siswa td {
+  padding: 12px;
+  text-align: left;
+}
+
+.table th {
+  background: #2563eb;
+  color: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.table td {
+  border-bottom: 1px solid #ddd;
+}
+
+.tabel-siswa th {
+  background: #2563eb;
+  color: #fff;
+}
+
+.tabel-siswa td {
+  border: 1px solid #ddd;
+}
+
+.tabel-siswa tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.tabel-siswa tr:hover {
+  background: #e0f2fe;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .dashboard {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .sidebar h2 {
+    display: none;
+  }
+
+  .menu {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .menu li {
+    margin: 0 6px;
+  }
+
+  .content {
+    margin-left: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 20px;
+  }
+
+  .cards {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===============================
+   CONTENT (DATA GURU)
+================================ */
+.content {
+  margin-left: 260px;         /* sejajar sidebar */
+  padding: 40px;
+  flex: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-height: 100vh;
+  background-color: #e0f2fe;  /* blok biru muda */
+  border-radius: 0 16px 16px 0;
+}
+
+.content h1 {
+  text-align: center;
+  margin-bottom: 5px;
+  position: sticky;
+  top: 0;
+  background-color: #2563eb;  /* biru tua header */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.content .subtitle {
+  text-align: center;
+  color: rgba(2,2,2,0.85);
+  margin-bottom: 20px;
+}
+
+/* FORM TAMBAH GURU */
+.card .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.card input {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.btn.primary {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.btn.primary:hover {
+  background: #1e40af;
+}
+
+/* TABEL GURU */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  background: #2563eb;
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+}
+
+.table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+}
+
+.table tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.table tr:hover {
+  background: #e0f2fe;
+}
+
+/* CARD UMUM */
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding: 20px;
+    border-radius: 0;
+  }
+
+  .card .form-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+}
+
+
+/* ===============================
+   CONTENT
+================================ */
+.content {
+  margin-left: 260px;
+  padding: 40px;
+  flex: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  min-height: 100vh;
+  background-color: #e0f2fe; /* biru muda blok */
+  border-radius: 0 16px 16px 0;
+}
+
+.content h1 {
+  text-align: center;
+  margin-bottom: 10px;
+  position: sticky;
+  top: 0;
+  background-color: #2563eb; /* biru tua header */
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+/* ===============================
+   FORM TAMBAH & IMPORT
+================================ */
+.forms-container {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.card {
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  flex: 1 1 300px; /* responsif */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card input[type="text"],
+.card input[type="file"],
+.card select {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.card button {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.card button:hover {
+  background: #1e40af;
+}
+
+.card small {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+/* ===============================
+   TABEL DAFTAR SISWA
+================================ */
+.tabel-siswa {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.tabel-siswa th {
+  background: #2563eb;
+  color: #fff;
+  padding: 12px;
+  text-align: left;
+}
+
+.tabel-siswa td {
+  border: 1px solid #ddd;
+  padding: 12px;
+}
+
+.tabel-siswa tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+.tabel-siswa tr:hover {
+  background: #e0f2fe;
+}
+
+/* ===============================
+   RESPONSIVE
+================================ */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    padding: 20px;
+    border-radius: 0;
+  }
+
+  .forms-container {
+    flex-direction: column;
+  }
+}
+
+
+/* CONTENT UTAMA */ untuk buat soal
+.content {
+  margin-left: 260px;
+  width: calc(100% - 260px);
+  padding: 30px 40px;
+  background-color: #e0f2fe; /* blok biru */
+  color: #020202;
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  border-radius: 16px 0 0 16px;
+}
+
+.content h1 {
+  text-align: center;
+  margin-bottom: 5px;
+  position: sticky;
+  top: 0;
+  background-color: #2563eb;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 8px;
+  z-index: 10;
+}
+
+.content .subtitle {
+  text-align: center;
+  color: rgba(2,2,2,0.85);
+  margin-bottom: 20px;
+}
+
+/* FORM CARD */
+.form-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 16px;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.form-card input[type="text"],
+.form-card input[type="file"] {
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #d1d5db;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.form-card button {
+  padding: 10px 16px;
+  border-radius: 8px;
+  border: none;
+  background-color: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+.form-card button:hover {
+  background-color: #1e40af;
+}
+
+/* FLEX GRID UNTUK FORM INFO UJIAN & IMPORT WORD */
+.form-row {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.form-row .form-card {
+  flex: 1; /* masing-masing mengambil 50% jika layar cukup */
+}
+
+/* DAFTAR SOAL & AKSI */
+#daftarSoal {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+#daftarSoal .card {
+  padding: 12px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* TOMBOL AKSI DI BAWAH */
+.actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 20px;
+  }
+
+  .form-row {
+    flex-direction: column;
+  }
+}

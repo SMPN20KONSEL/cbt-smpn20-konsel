@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CBT - Ujian</title>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="../assets/css/soal.css">
+
+  <!-- MathJax -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" defer></script>
+
+</head>
+
+<body>
+
+<!-- ===== HEADER ===== -->
+<header class="topbar">
+  <div class="brand">
+    <img src="../assets/img/logo-sekolah.png" class="brand-logo">
+    <div class="brand-text">
+      <strong>SMPN 20 KONAWE SELATAN</strong>
+      <small>CBT Application</small>
+    </div>
+  </div>
+
+  <div class="user">
+    <span id="c-nama"></span>
+    <button class="logout" id="btnLogout">Logout</button>
+  </div>
+</header>
+
+<!-- ===== CONTENT ===== -->
+<div class="container">
+
+  <!-- INFO -->
+  <div class="info-bar">
+    <div class="soal-no">
+      SOAL NO. <span id="no-soal">1</span>
+    </div>
+    <div class="timer" id="timer">00:00</div>
+  </div>
+
+  <!-- SOAL -->
+  <div class="card-soal" id="soal-container">
+    <!-- Soal dari JS -->
+  </div>
+
+  <!-- NAV -->
+  <div class="nav-footer">
+    <button class="btn prev" id="prev">⬅ Sebelumnya</button>
+    <button class="btn next" id="next">Selanjutnya ➡</button>
+  </div>
+
+</div>
+<!-- MODAL KONFIRMASI LOGOUT -->
+<div class="modal" id="logoutModal">
+  <div class="modal-box">
+    <h3>Keluar dari Ujian?</h3>
+    <p>
+      Jika Anda keluar, <strong>jawaban akan dikirim otomatis</strong>
+      dan Anda <b>tidak bisa kembali</b>.
+    </p>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" id="cancelLogout">Batal</button>
+      <button class="btn-danger" id="confirmLogout">Keluar</button>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast"></div>
+
+<script type="module" src="../assets/js/soal.js"></script>
+</body>
+</html>

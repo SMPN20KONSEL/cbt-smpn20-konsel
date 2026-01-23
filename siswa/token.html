@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Ujian</title>
+
+  <!-- CSS (reuse login style) -->
+  <link rel="stylesheet" href="../assets/css/login.css">
+</head>
+
+<body>
+
+  <div class="login-box">
+    <div class="login-logo">
+      <img src="../assets/img/logo-sekolah.png" alt="Logo Sekolah">
+      <div>
+        <strong>SMPN 20 KONAWE SELATAN</strong>
+        <span>CBT Application</span>
+      </div>
+    </div>
+
+    <!-- JUDUL -->
+    <h2>Token Ujian</h2>
+    <p>Masukkan token yang diberikan guru untuk memulai ujian</p>
+
+    <!-- INPUT TOKEN -->
+    <div class="input-group">
+      <input
+        type="text"
+        id="token"
+        placeholder="Masukkan Token Ujian"
+        autocomplete="off"
+      >
+    </div>
+
+    <!-- BUTTON -->
+    <button onclick="verifyToken()">Mulai Ujian</button>
+
+    <!-- ERROR -->
+    <div id="error"></div>
+
+    <!-- FOOTER -->
+    <p class="footer-text">© 2026 Sistem Ujian Sekolah</p>
+
+  </div>
+
+  <!-- JAVASCRIPT -->
+  <script type="module" src="../assets/js/token.js"></script>
+
+</body>
+</html>

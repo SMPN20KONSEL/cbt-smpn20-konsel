@@ -1,0 +1,210 @@
+/* ==============================
+   RESET & GLOBAL
+============================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Arial, sans-serif;
+}
+
+/* ==============================
+   VARIABEL WARNA
+============================== */
+:root {
+  --bg-light: linear-gradient(135deg, #2563eb, #1e40af);
+  --bg-dark: linear-gradient(135deg, #0f172a, #020617);
+
+  --card-light: #ffffff;
+  --card-dark: #020617;
+
+  --text-light: #111827;
+  --text-dark: #e5e7eb;
+
+  --muted-light: #6b7280;
+  --muted-dark: #9ca3af;
+
+  --primary: #2563eb;
+  --primary-dark: #1e40af;
+}
+
+/* ==============================
+   BODY
+============================== */
+body {
+  min-height: 100vh;
+  background: var(--bg-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.4s ease;
+}
+
+/* ==============================
+   MODE GELAP (AUTO)
+============================== */
+@media (prefers-color-scheme: dark) {
+  body {
+    background: var(--bg-dark);
+  }
+
+  .card {
+    background: var(--card-dark);
+  }
+
+  h1 {
+    color: var(--text-dark);
+  }
+
+  .subtitle {
+    color: var(--muted-dark);
+  }
+}
+
+/* ==============================
+   MODE GELAP MANUAL
+============================== */
+body.dark {
+  background: var(--bg-dark);
+}
+
+body.dark .card {
+  background: var(--card-dark);
+}
+
+body.dark h1 {
+  color: var(--text-dark);
+}
+
+body.dark .subtitle {
+  color: var(--muted-dark);
+}
+
+/* ==============================
+   CONTAINER
+============================== */
+.container {
+  width: 100%;
+  max-width: 420px;
+  padding: 20px;
+}
+
+/* ==============================
+   CARD (ANIMASI MASUK)
+============================== */
+.card {
+  background: var(--card-light);
+  padding: 35px 30px;
+  border-radius: 16px;
+  text-align: center;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+
+  animation: fadeSlide 0.9s ease forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes fadeSlide {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+/* ==============================
+   LOGO SEKOLAH
+============================== */
+.logo {
+  width: 130px;        /* BESARKAN logo */
+  height: auto;
+  display: block;      /* WAJIB agar margin auto bekerja */
+  margin: 0 auto 20px; /* RATA TENGAH + jarak bawah */
+}
+/* ==============================
+   TITLE & SUBTITLE
+============================== */
+h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-light);
+  margin-bottom: 6px;
+}
+
+.subtitle {
+  font-size: 14px;
+  color: var(--muted-light);
+  margin-bottom: 30px;
+  letter-spacing: 1px;
+}
+
+/* ==============================
+   BUTTON GROUP
+============================== */
+.btn-group {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+}
+
+/* ==============================
+   BUTTON
+============================== */
+.btn {
+  flex: 1;
+  padding: 12px 0;
+  border: none;
+  border-radius: 13px;
+  background: var(--primary);
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.5s ease;
+}
+
+.btn i {
+  margin-right: 6px;
+}
+
+.btn:hover {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+}
+
+/* ==============================
+   BUTTON OUTLINE
+============================== */
+.btn-outline {
+  background: transparent;
+  color: var(--primary);
+  border: 2px solid var(--primary);
+}
+
+.btn-outline:hover {
+  background: var(--primary);
+  color: #ffffff;
+}
+
+/* ==============================
+   LINK RESET
+============================== */
+a {
+  text-decoration: none;
+  width: 100%;
+}
+
+/* ==============================
+   RESPONSIVE HP
+============================== */
+@media (max-width: 480px) {
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .logo {
+    width: 75px;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+}
