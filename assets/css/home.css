@@ -192,19 +192,53 @@ a {
   width: 100%;
 }
 
-/* ==============================
-   RESPONSIVE HP
-============================== */
-@media (max-width: 480px) {
-  .btn-group {
+/* =====================
+   TABLET & HP BESAR
+===================== */
+@media (max-width: 768px) {
+  .content {
+    margin-left: 0;
+    width: 100%;
+    border-radius: 0;
+    padding: 20px;
+  }
+
+  .form-row {
     flex-direction: column;
   }
+}
 
-  .logo {
-    width: 75px;
+/* =====================
+   HP NORMAL
+===================== */
+@media (max-width: 576px) {
+  .content {
+    padding: 16px;
   }
 
-  h1 {
-    font-size: 22px;
+  input,
+  select,
+  textarea,
+  button {
+    width: 100%;
+    font-size: 14px;
+  }
+}
+
+/* =====================
+   HP KECIL
+===================== */
+@media (max-width: 360px) {
+  .content {
+    padding: 12px;
+  }
+
+  h1, h2, h3 {
+    font-size: 16px;
+  }
+
+  button {
+    padding: 10px;
+    font-size: 13px;
   }
 }
