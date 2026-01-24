@@ -8,6 +8,22 @@ import { doc, getDoc }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 /* ===============================
+   AUTO ISI EMAIL DARI QR
+================================ */
+const emailInput    = document.getElementById("email");
+const passwordInput = document.getElementById("password");
+const errorDiv      = document.getElementById("error");
+
+const params = new URLSearchParams(window.location.search);
+const nis  = params.get("nis")?.trim();
+const nama = params.get("nama")?.trim().toLowerCase();
+
+if (nis && nama) {
+  emailInput.value = `${nama}${nis}@smp.belajar.id`;
+  passwordInput.focus();
+}
+
+/* ===============================
    LOGIN SISWA
 ================================ */
 async function login() {
@@ -22,9 +38,11 @@ async function login() {
   }
 
   try {
+    // 🔐 LOGIN FIREBASE AUTH
     const cred = await signInWithEmailAndPassword(auth, email, password);
     const uid  = cred.user.uid;
 
+    // 🔎 VALIDASI AKUN SISWA
     const akunSnap = await getDoc(doc(db, "akun_siswa", uid));
     if (!akunSnap.exists()) {
       await auth.signOut();
@@ -32,9 +50,10 @@ async function login() {
       return;
     }
 
-    const { nis } = akunSnap.data();
-    const siswaSnap = await getDoc(doc(db, "siswa", nis));
+    const { nis: nisDB } = akunSnap.data();
 
+    // 🔎 VALIDASI DATA SISWA
+    const siswaSnap = await getDoc(doc(db, "siswa", nisDB));
     if (!siswaSnap.exists() || !siswaSnap.data().aktif) {
       await auth.signOut();
       errorDiv.textContent = "Data siswa tidak valid.";
@@ -43,12 +62,13 @@ async function login() {
 
     const siswa = siswaSnap.data();
 
-    // simpan session
+    // 💾 SIMPAN SESSION
     sessionStorage.setItem("siswaUid", uid);
-    sessionStorage.setItem("nisSiswa", nis);
+    sessionStorage.setItem("nisSiswa", nisDB);
     sessionStorage.setItem("namaSiswa", siswa.nama);
     sessionStorage.setItem("kelasSiswa", siswa.kelas);
 
+    // 🚀 MASUK HALAMAN TOKEN
     location.href = "./siswa/token.html";
 
   } catch (err) {
@@ -64,10 +84,16 @@ document.getElementById("btnLogin")
   ?.addEventListener("click", login);
 
 /* ===============================
+   ENTER = LOGIN
+================================ */
+passwordInput?.addEventListener("keydown", e => {
+  if (e.key === "Enter") login();
+});
+
+/* ===============================
    TOGGLE PASSWORD
 ================================ */
 const toggleBtn = document.getElementById("togglePassword");
-
 toggleBtn?.addEventListener("click", () => {
   const show = passwordInput.type === "password";
   passwordInput.type = show ? "text" : "password";
