@@ -8,47 +8,6 @@ import { doc, getDoc }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 /* ===============================
-   AUTO ISI EMAIL DARI QR (NIS)
-================================ */
-const emailInput = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const errorDiv = document.getElementById("error");
-
-(async () => {
-  const params = new URLSearchParams(window.location.search);
-  const nis = params.get("nis");
-
-  if (!nis) return;
-
-  try {
-    const siswaRef = doc(db, "siswa", nis);
-    const siswaSnap = await getDoc(siswaRef);
-
-    if (!siswaSnap.exists()) {
-      errorDiv.textContent = "Data siswa tidak ditemukan";
-      return;
-    }
-
-    const siswa = siswaSnap.data();
-
-    if (!siswa.aktif) {
-      errorDiv.textContent = "Akun siswa belum aktif";
-      return;
-    }
-
-    // ✅ EMAIL DIAMBIL LANGSUNG DARI DATABASE
-    emailInput.value = siswa.email;
-
-    // fokus ke password
-    passwordInput.focus();
-
-  } catch (err) {
-    console.error(err);
-    errorDiv.textContent = "Gagal memuat data siswa";
-  }
-})();
-
-/* ===============================
    LOGIN SISWA
 ================================ */
 async function login() {
