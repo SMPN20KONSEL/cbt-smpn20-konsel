@@ -42,6 +42,8 @@ let sudahDikirim = false;
 
 let jawabanSiswa = {
   pg: {},
+  mcma: {},
+  kategori: {},
   essay: {}
 };
 
@@ -73,7 +75,25 @@ function simpanJawaban() {
       jawabanSiswa.pg[soal.id] = pilih.dataset.key;
     }
   }
+// ===== MCMA =====
+if (soal.tipe === "mcma") {
+  const checked = document.querySelectorAll(
+    `input[name="soal_${soal.id}"]:checked`
+  );
+  jawabanSiswa.mcma[soal.id] = Array.from(checked).map(cb => cb.value);
+}
 
+// ===== KATEGORI =====
+if (soal.tipe === "kategori") {
+  const hasil = [];
+
+  document.querySelectorAll(`[data-kat="${soal.id}"]`).forEach((row, i) => {
+    const pilih = row.querySelector("input:checked");
+    hasil.push(pilih ? pilih.value === "true" : null);
+  });
+
+  jawabanSiswa.kategori[soal.id] = hasil;
+}
   if (soal.tipe === "essay") {
     const textarea = document.querySelector(
       `textarea[name="soal_${soal.id}"]`
@@ -85,71 +105,78 @@ function simpanJawaban() {
 
   localStorage.setItem(LS_JAWABAN_KEY, JSON.stringify(jawabanSiswa));
 }
+document.addEventListener("change", (e) => {
+  if (e.target.type === "radio") {
+    const id = e.target.dataset.id;
+    const index = e.target.dataset.index;
+
+    if (!jawabanSiswa.kategori[id]) {
+      jawabanSiswa.kategori[id] = [];
+    }
+
+    jawabanSiswa.kategori[id][index] = (e.target.value === "true");
+  }
+});
 
 // ================= HITUNG NILAI =================
 function hitungNilai() {
-  let nilaiPG = 0;
+  let totalNilai = 0;
 
   semuaSoal.forEach(soal => {
+
+    // ===== PG =====
     if (soal.tipe === "pg") {
       if ((jawabanSiswa.pg[soal.id] || "") === soal.kunci) {
-        nilaiPG += soal.skor;
+        totalNilai += 2;
       }
     }
+
+    // ===== MCMA =====
+    if (soal.tipe === "mcma") {
+      const kunci = soal.kunci || [];
+      const jawaban = jawabanSiswa.mcma[soal.id] || [];
+
+      let benarDipilih = 0;
+
+      jawaban.forEach(j => {
+        if (kunci.includes(j)) {
+          benarDipilih++;
+        }
+      });
+
+      if (kunci.length > 0) {
+        let skor = (benarDipilih / kunci.length) * 2;
+        totalNilai += skor;
+      }
+    }
+
+    // ===== KATEGORI =====
+    if (soal.tipe === "kategori") {
+      const pernyataan = soal.pernyataan || [];
+      const jawaban = jawabanSiswa.kategori[soal.id] || [];
+
+      let benar = 0;
+
+      pernyataan.forEach((p, i) => {
+        if (jawaban[i] === p.jawabanBenar) {
+          benar++;
+        }
+      });
+
+      if (pernyataan.length > 0) {
+        let skor = (benar / pernyataan.length) * 2;
+        totalNilai += skor;
+      }
+    }
+
   });
 
   return {
-    nilaiPG,
+    nilaiPG: totalNilai,
     nilaiEssay: 0,
-    totalNilai: nilaiPG
+    totalNilai: Math.round(totalNilai)
   };
 }
-
-// ================= SIMPAN FIRESTORE =================
-async function simpanJawabanFirestore() {
-  if (sudahDikirim) return;
-  sudahDikirim = true;
-
-  const nilai = hitungNilai();
-  const docId = `${siswaUid}_${kodeUjian}`;
-
-  try {
-    await setDoc(doc(db, "jawaban_siswa", docId), {
-      siswaUid,
-      nis: sessionStorage.getItem("nisSiswa"),
-      namaSiswa,
-      kelas: kelasSiswa,
-      kodeUjian,
-      mapel: mapelUjian,
-      judulUjian,
-
-      jawabanPG: jawabanSiswa.pg,
-      jawabanEssay: jawabanSiswa.essay,
-
-      nilaiPG: nilai.nilaiPG,
-      nilaiEssay: nilai.nilaiEssay,
-      totalNilai: nilai.totalNilai,
-
-      waktu_mulai: new Date(Number(waktuMulai)),
-      waktu_selesai: serverTimestamp()
-    });
-
-    console.log("✅ Jawaban tersimpan");
-
-  } catch (err) {
-    console.error("❌ Firestore error:", err);
-  } finally {
-    // 🚀 REDIRECT DIJAMIN JALAN
-    localStorage.setItem(LS_KIRIM_KEY, "true");
-    localStorage.removeItem(LS_JAWABAN_KEY);
-    localStorage.removeItem(LS_WAKTU_KEY);
-
-    setTimeout(() => {
-      window.location.replace("selesai.html");
-    }, 300);
-  }
-}
-
 
 // ================= CEK SOAL KOSONG =================
 function cekSoalKosong() {
@@ -206,7 +233,22 @@ async function loadSoal() {
       kunci: s.jawabanBenar || s.kunci,
       skor: s.skor || 2
     }));
+const soalMCMA = (bank.soalMCMA || []).map(s => ({
+  tipe: "mcma",
+  id: s.id,
+  pertanyaan: bersihkan(s.pertanyaan),
+  opsi: s.opsi,
+  kunci: s.jawabanBenar || [],
+  skor: s.skor || 2
+}));
 
+const soalKategori = (bank.soalKategori || []).map(s => ({
+  tipe: "kategori",
+  id: s.id,
+  pertanyaan: bersihkan(s.pertanyaan),
+  pernyataan: s.pernyataan || [],
+  skor: s.skor || 2
+}));
     const soalEssay = (bank.soalEssay || []).map(s => ({
       tipe: "essay",
       id: s.id,
@@ -214,8 +256,7 @@ async function loadSoal() {
       skorMax: s.skorMax || 10
     }));
 
-    semuaSoal = [...soalPG, ...soalEssay];
-
+semuaSoal = [...soalPG, ...soalMCMA, ...soalKategori, ...soalEssay];
     const cache = localStorage.getItem(LS_JAWABAN_KEY);
     if (cache) jawabanSiswa = JSON.parse(cache);
 
@@ -253,6 +294,79 @@ function tampilkanSoal() {
     });
     html += `</div>`;
   }
+
+if (soal.tipe === "mcma") {
+  html += `<div class="mcma-options">`;
+
+  Object.entries(soal.opsi).forEach(([key, teks]) => {
+    const checked = jawabanSiswa.mcma[soal.id]?.includes(key);
+
+    html += `
+      <div class="opsi-row">
+
+        <span class="opsi-text">
+          ${teks}
+        </span>
+
+        <input type="checkbox"
+          name="soal_${soal.id}"
+          value="${key}"
+          ${checked ? "checked" : ""}
+        >
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+}
+
+if (soal.tipe === "kategori") {
+  html += `<div class="kategori-options">`;
+
+  html += `
+    <table class="kategori-table">
+      <thead>
+        <tr>
+          <th>Pernyataan</th>
+          <th>Benar</th>
+          <th>Salah</th>
+        </tr>
+      </thead>
+      <tbody>
+  `;
+
+  soal.pernyataan.forEach((p, i) => {
+    const jawaban = jawabanSiswa.kategori[soal.id]?.[i];
+
+    html += `
+      <tr>
+        <td class="teks">${p.teks}</td>
+
+        <td>
+          <input type="radio"
+            name="kat_${soal.id}_${i}"
+            value="true"
+            data-id="${soal.id}"
+            data-index="${i}"
+            ${jawaban === true ? "checked" : ""}
+          >
+        </td>
+
+        <td>
+          <input type="radio"
+            name="kat_${soal.id}_${i}"
+            value="false"
+            data-id="${soal.id}"
+            data-index="${i}"
+            ${jawaban === false ? "checked" : ""}
+          >
+        </td>
+      </tr>
+    `;
+  });
+
+  html += `</tbody></table></div>`;
+}
 
   if (soal.tipe === "essay") {
     html += `
@@ -319,16 +433,110 @@ const intervalTimer = setInterval(() => {
 }, 1000);
 
 
+// ================= CEK SUDAH KIRIM =================
+if (localStorage.getItem(LS_KIRIM_KEY) === "true") {
+  alert("Ujian sudah dikirim sebelumnya. Anda tidak bisa mengulang.");
+  location.href = "selesai.html";
+}
+
+// ================= NONAKTIF COPY/PASTE ESSAY =================
+document.addEventListener("paste", e => {
+  if (e.target.tagName === "TEXTAREA") e.preventDefault();
+});
+document.addEventListener("copy", e => {
+  if (e.target.tagName === "TEXTAREA") e.preventDefault();
+});
+
+// ================= LEPAS MULTI LOGIN =================
+async function lepasSesiUjian() {
+  try {
+    await setDoc(doc(db, "sesi_ujian", siswaUid), {
+      sedangUjian: false
+    }, { merge: true });
+  } catch (err) {
+    console.error("Error lepas sesi:", err);
+  }
+}
+
+// ================= SIMPAN FIRESTORE =================
+async function simpanJawabanFirestore() {
+  if (sudahDikirim) return;
+  sudahDikirim = true;
+
+  const nilai = hitungNilai();
+  const docId = `${siswaUid}_${kodeUjian}`;
+
+  try {
+    await setDoc(doc(db, "jawaban_siswa", docId), {
+      siswaUid,
+      nis: sessionStorage.getItem("nisSiswa"),
+      namaSiswa,
+      kelas: kelasSiswa,
+      kodeUjian,
+      mapel: mapelUjian,
+      judulUjian,
+
+      jawabanPG: jawabanSiswa.pg,
+      jawabanEssay: jawabanSiswa.essay,
+
+      nilaiPG: nilai.nilaiPG,
+      nilaiEssay: nilai.nilaiEssay,
+      totalNilai: nilai.totalNilai,
+
+      waktu_mulai: new Date(Number(waktuMulai)),
+      waktu_selesai: serverTimestamp()
+    });
+
+    console.log("✅ Jawaban tersimpan");
+
+  } catch (err) {
+    console.error("❌ Firestore error:", err);
+  } finally {
+    // 🚀 Set flag kirim
+    localStorage.setItem(LS_KIRIM_KEY, "true");
+    localStorage.removeItem(LS_JAWABAN_KEY);
+    localStorage.removeItem(LS_WAKTU_KEY);
+
+    // lepas multi login
+    await lepasSesiUjian();
+
+    setTimeout(() => {
+      window.location.replace("selesai.html");
+    }, 300);
+  }
+}
+
+// Mencegah klik kanan, copy, dan print screen
+document.addEventListener("contextmenu", e => e.preventDefault());
+document.addEventListener("copy", e => e.preventDefault());
+document.addEventListener("keydown", e => {
+  // PrintScreen, Ctrl+S, Ctrl+P, Ctrl+C
+  if (
+    e.key === "PrintScreen" ||
+    (e.ctrlKey && (e.key === "s" || e.key === "p" || e.key === "c"))
+  ) {
+    e.preventDefault();
+    tampilkanToast("Dilarang melakukan screenshot, simpan, atau menyalin jawaban!");
+  }
+});
+
+// Nonaktifkan paste di essay
+document.addEventListener("paste", e => {
+  if (e.target.tagName === "TEXTAREA") e.preventDefault();
+});
+
 // ================= LOGOUT =================
 btnLogout.onclick = () => modal.classList.add("show");
 cancelLogout.onclick = () => modal.classList.remove("show");
 
-confirmLogout.onclick = () => {
+// hapus definisi lama confirmLogout.onclick
+confirmLogout.onclick = async () => {
   simpanJawaban();
+  await lepasSesiUjian();
   sessionStorage.clear();
   localStorage.removeItem(LS_WAKTU_KEY);
   location.href = "login-siswa.html";
 };
 
 // ================= INIT =================
-loadSoal();
+loadSoal(); 

@@ -204,3 +204,136 @@ button:hover {
     font-size: 13px;
   }
 }
+/* ================= SUPER RESPONSIVE LOGIN ================= */
+
+/* 🔥 FLEX BIAR AMAN DI SEMUA LAYAR */
+body {
+  padding: 15px;
+}
+
+/* ================= LOGIN BOX ================= */
+.login-box {
+  width: 100%;
+  max-width: 380px; /* tetap rapi di desktop */
+}
+
+/* ================= TABLET ================= */
+@media (max-width: 768px) {
+  .login-box {
+    padding: 28px 22px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  p {
+    font-size: 13px;
+  }
+}
+
+/* ================= HP NORMAL ================= */
+@media (max-width: 480px) {
+
+  body {
+    padding: 10px;
+  }
+
+  .login-box {
+    border-radius: 12px;
+    padding: 24px 18px;
+  }
+
+  .login-logo strong {
+    font-size: 16px;
+  }
+
+  .login-logo span {
+    font-size: 11px;
+  }
+
+  h2 {
+    font-size: 17px;
+  }
+
+  p {
+    font-size: 13px;
+    margin-bottom: 18px;
+  }
+
+  .input-group input {
+    padding: 11px 36px;
+    font-size: 13px;
+  }
+
+  button {
+    font-size: 14px;
+    padding: 12px;
+  }
+}
+
+/* ================= HP KECIL (320px) ================= */
+@media (max-width: 360px) {
+
+  .login-box {
+    padding: 20px 14px;
+  }
+
+  .login-logo img {
+    width: 34px;
+    height: 34px;
+  }
+
+  .login-logo strong {
+    font-size: 14px;
+  }
+
+  h2 {
+    font-size: 15px;
+  }
+
+  p {
+    font-size: 12px;
+  }
+
+  .input-group input {
+    padding: 10px 32px;
+    font-size: 12px;
+  }
+
+  button {
+    font-size: 13px;
+    padding: 10px;
+  }
+}
+
+/* ================= BACKGROUND FIX ================= */
+@media (max-width: 480px) {
+  body::before {
+    display: none; /* 🔥 biar tidak ganggu HP */
+  }
+}
+
+/* ================= TOUCH FRIENDLY ================= */
+button:active {
+  transform: scale(0.97);
+}
+
+/* ================= HILANGKAN TAP HIGHLIGHT ================= */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+.login-box {
+  animation: fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -6,6 +6,10 @@ body {
   padding: 0;
 }
 
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
 /* ================= TOPBAR ================= */
 .topbar {
   display: flex;
@@ -14,6 +18,9 @@ body {
   background: #0b48ac;
   color: #fff;
   padding: 12px 20px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
 .brand {
@@ -42,7 +49,7 @@ body {
   gap: 12px;
 }
 
-/* ===== MODAL LOGOUT ===== */
+/* ================= MODAL LOGOUT ================= */
 .modal {
   position: fixed;
   inset: 0;
@@ -68,8 +75,8 @@ body {
 }
 
 @keyframes pop {
-  from { transform: scale(0.9); opacity: 0 }
-  to   { transform: scale(1); opacity: 1 }
+  from { transform: scale(0.9); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
 }
 
 .modal-box h3 {
@@ -88,25 +95,23 @@ body {
   margin-top: 20px;
 }
 
-.btn-cancel {
-  flex: 1;
-  padding: 10px;
-  background: #2b71fc;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
+.btn-cancel,
 .btn-danger {
   flex: 1;
   padding: 10px;
-  background: #dc2626;
-  color: #fff;
   border: none;
   border-radius: 8px;
   cursor: pointer;
 }
 
+.btn-cancel {
+  background: #2b71fc;
+}
+
+.btn-danger {
+  background: #dc2626;
+  color: #fff;
+}
 
 /* ================= CONTAINER ================= */
 .container {
@@ -155,6 +160,7 @@ body {
   line-height: 1.6;
   margin-bottom: 18px;
 }
+
 /* ================= OPSI PILIHAN GANDA ================= */
 .opsi {
   display: flex;
@@ -166,7 +172,6 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 10px;
-
   background: #f8fafc;
   border: 1px solid #e5e7eb;
   padding: 10px 14px;
@@ -189,6 +194,81 @@ body {
   min-width: 20px;
 }
 
+/* ================= MCMA OPTIONS ================= */
+.mcma-options {
+  margin-top: 10px;
+}
+
+.mcma-options .opsi-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.mcma-options .opsi-row:hover {
+  background: #f9fafb;
+}
+
+.mcma-options .opsi-text {
+  flex: 1;
+}
+
+.mcma-options input[type="checkbox"] {
+  transform: scale(1.3);
+  cursor: pointer;
+}
+
+.mcma-options input:checked + * {
+  font-weight: bold;
+  color: #2563eb;
+}
+
+/* ================= KATEGORI ================= */
+.kategori-options {
+  margin-top: 10px;
+  overflow-x: auto;
+}
+
+.kategori-table {
+  width: 100%;
+  min-width: 400px;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.kategori-table th {
+  background: #f3f4f6;
+  padding: 10px;
+  font-size: 13px;
+}
+
+.kategori-table td {
+  border: 1px solid #e5e7eb;
+  padding: 10px;
+}
+
+.kategori-table .teks {
+  text-align: left;
+}
+
+.kategori-table tr:hover {
+  background: #f9fafb;
+}
+
+.kategori-table td:nth-child(2),
+.kategori-table td:nth-child(3) {
+  text-align: center;
+  width: 80px;
+}
+
+.kategori-table input[type="radio"] {
+  transform: scale(1.3);
+  cursor: pointer;
+}
 
 /* ================= ESSAY ================= */
 textarea {
@@ -219,6 +299,7 @@ textarea:focus {
   border: none;
   cursor: pointer;
   font-weight: bold;
+  transition: all 0.2s ease;
 }
 
 .btn.prev {
@@ -232,6 +313,10 @@ textarea:focus {
 
 .btn.next:hover {
   background: #1d4ed8;
+}
+
+.btn:active {
+  transform: scale(0.97);
 }
 
 /* ================= TOAST ================= */
@@ -252,9 +337,14 @@ textarea:focus {
   min-width: 260px;
 }
 
-/* =====================
-   TABLET & HP BESAR
-===================== */
+/* ================= RESPONSIVE ================= */
+/* Global font scaling */
+html { font-size: 16px; }
+@media (max-width: 768px) { html { font-size: 15px; } }
+@media (max-width: 480px) { html { font-size: 14px; } }
+@media (max-width: 360px) { html { font-size: 13px; } }
+
+/* Tablet & HP Besar */
 @media (max-width: 768px) {
   .content {
     margin-left: 0;
@@ -262,43 +352,65 @@ textarea:focus {
     border-radius: 0;
     padding: 20px;
   }
-
   .form-row {
     flex-direction: column;
   }
 }
 
-/* =====================
-   HP NORMAL
-===================== */
+/* HP Normal */
 @media (max-width: 576px) {
-  .content {
-    padding: 16px;
-  }
-
-  input,
-  select,
-  textarea,
-  button {
-    width: 100%;
-    font-size: 14px;
-  }
+  .content { padding: 16px; }
+  input, select, textarea, button { width: 100%; font-size: 14px; }
 }
 
-/* =====================
-   HP KECIL
-===================== */
+/* HP Kecil */
 @media (max-width: 360px) {
-  .content {
-    padding: 12px;
-  }
+  .content { padding: 12px; }
+  h1, h2, h3 { font-size: 16px; }
+  button { padding: 10px; font-size: 13px; }
+}
 
-  h1, h2, h3 {
-    font-size: 16px;
-  }
+/* Topbar mobile */
+@media (max-width: 600px) {
+  .topbar { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .user { width: 100%; justify-content: space-between; }
+}
 
-  button {
-    padding: 10px;
-    font-size: 13px;
-  }
+/* Card mobile */
+@media (max-width: 480px) {
+  .card-soal { padding: 16px; }
+  .soal-text { font-size: 14px; }
+}
+
+/* Opsi mobile */
+@media (max-width: 480px) {
+  .opsi label { padding: 10px; font-size: 14px; }
+  .opsi { gap: 8px; }
+}
+
+/* MCMA mobile */
+@media (max-width: 480px) {
+  .mcma-options .opsi-row { flex-direction: column; align-items: flex-start; }
+  .mcma-options input[type="checkbox"] { margin-top: 8px; }
+}
+
+/* Textarea mobile */
+@media (max-width: 480px) {
+  textarea { font-size: 14px; min-height: 100px; }
+}
+
+/* Nav buttons mobile */
+@media (max-width: 480px) {
+  .nav-footer { flex-direction: column; gap: 10px; }
+  .btn { width: 100%; }
+}
+
+/* Timer mobile */
+@media (max-width: 480px) {
+  .timer { font-size: 14px; padding: 5px 10px; }
+}
+
+/* Toast mobile */
+@media (max-width: 480px) {
+  .toast { width: 90%; font-size: 13px; padding: 12px; }
 }

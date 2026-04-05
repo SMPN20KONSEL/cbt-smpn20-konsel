@@ -236,3 +236,70 @@ select:focus {
     font-size: 13px;
   }
 }
+/* ================= FINAL PERFECT RESPONSIVE ================= */
+
+/* 🔥 FIX GLOBAL */
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* 🔥 FIX NAV MOBILE */
+@media (max-width: 600px) {
+  .nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+}
+
+/* 🔥 FIX GRID MENU */
+.card-menu {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+/* 🔥 FIX CARD AGAR TIDAK TABRAKAN */
+.card {
+  width: 100%;
+}
+
+/* 🔥 FIX CONTENT SAFE */
+.content {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+/* 🔥 FIX BODY JANGAN TERLALU SEMPIT */
+@media (min-width: 768px) {
+  body {
+    padding: 0;
+  }
+}
+
+/* 🔥 FIX BUTTON MOBILE */
+@media (max-width: 480px) {
+  .btn-group {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+}
+
+/* 🔥 FIX FONT SCALING */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 480px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  html {
+    font-size: 13px;
+  }
+}
