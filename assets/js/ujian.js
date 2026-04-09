@@ -2,7 +2,9 @@
 import { db } from "./firebase.js";
 import {
   doc,
-  getDoc
+  getDoc,
+  setDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // ================= SESSION =================
@@ -10,8 +12,9 @@ const nis   = sessionStorage.getItem("nisSiswa");
 const nama  = sessionStorage.getItem("namaSiswa");
 const kelas = sessionStorage.getItem("kelasSiswa");
 const kodeUjian = sessionStorage.getItem("kodeUjian");
+const uid   = sessionStorage.getItem("siswaUid");
 
-if (!nis || !kodeUjian) {
+if (!nis || !kodeUjian || !uid) {
   alert("Sesi ujian tidak valid");
   location.href = "token.html";
 }
@@ -56,9 +59,15 @@ async function loadMapel() {
 
 loadMapel();
 
-// ================= MULAI =================
-btnMulai.onclick = () => {
+// ================= MULAI UJIAN =================
+btnMulai.onclick = async () => {
+
+  await setDoc(doc(db, "peserta", uid), {
+    status: "mengerjakan",
+    kodeUjian: kodeUjian,
+    lastOnline: serverTimestamp()
+  }, { merge: true });
+
   sessionStorage.setItem("waktuMulai", Date.now());
   location.href = "soal.html";
 };
-

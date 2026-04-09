@@ -4,7 +4,8 @@
 import { auth, db } from "./firebase.js";
 import { signInWithEmailAndPassword }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { doc, getDoc }
+
+import { doc, getDoc, setDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 /* ===============================
@@ -67,6 +68,37 @@ async function login() {
     sessionStorage.setItem("nisSiswa", nisDB);
     sessionStorage.setItem("namaSiswa", siswa.nama);
     sessionStorage.setItem("kelasSiswa", siswa.kelas);
+
+    // ===============================
+    // 🔥 TAMBAHAN PENTING (TRACKING LOGIN)
+    // ===============================
+    const pesertaRef = doc(db, "peserta", uid);
+const snap = await getDoc(pesertaRef);
+
+if (!snap.exists()) {
+  // ✅ CREATE (boleh isi semua field)
+  await setDoc(pesertaRef, {
+    uid,
+    nis: nisDB,
+    nama: siswa.nama,
+    kelas: siswa.kelas,
+    email,
+    status: "login",
+    loginAt: serverTimestamp(),
+    lastOnline: serverTimestamp()
+  });
+} else {
+  // ✅ UPDATE (WAJIB hanya field yang diizinkan rules)
+  await setDoc(pesertaRef, {
+    status: "login",
+    lastOnline: serverTimestamp()
+  }, { merge: true });
+}
+setInterval(async () => {
+  await setDoc(doc(db, "peserta", uid), {
+    lastOnline: serverTimestamp()
+  }, { merge: true });
+}, 30000);
 
     // 🚀 MASUK HALAMAN TOKEN
     location.href = "./siswa/token.html";

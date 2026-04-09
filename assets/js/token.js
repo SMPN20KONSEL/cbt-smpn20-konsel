@@ -1,5 +1,5 @@
 import { db, auth } from "./firebase.js";
-import { doc, getDoc }
+import { doc, getDoc, setDoc, serverTimestamp }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 import { onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
@@ -16,7 +16,7 @@ onAuthStateChanged(auth, (user) => {
 });
 
 /* =============================
-   VERIFY TOKEN (FINAL)
+   VERIFY TOKEN
 ============================= */
 async function verifyToken() {
   const tokenInput = document.getElementById("token").value.trim();
@@ -30,27 +30,40 @@ async function verifyToken() {
   }
 
   try {
-    // 🔥 TOKEN = ID DOKUMEN JADWAL UJIAN
     const ref = doc(db, "jadwal_ujian", tokenInput);
     const snap = await getDoc(ref);
 
-   if (!snap.exists() || !snap.data().aktif) return error;
+    // ❌ token tidak ada
+    if (!snap.exists()) {
+      errorDiv.textContent = "Kode ujian tidak ditemukan!";
+      return;
+    }
 
-const ujian = snap.data();
+    const ujian = snap.data();
 
+    // ❌ belum aktif
     if (!ujian.aktif) {
       errorDiv.textContent = "Ujian belum aktif atau sudah selesai!";
       return;
     }
 
-sessionStorage.setItem("kodeUjian", tokenInput);
-sessionStorage.setItem("bankSoalId", ujian.bankSoalId);
-sessionStorage.setItem("durasiUjian", ujian.durasi);
-sessionStorage.setItem("mapelUjian", ujian.mapel);
-sessionStorage.setItem("judulUjian", ujian.judul);
+    // ✅ baru update status SETELAH valid
+    const uid = sessionStorage.getItem("siswaUid");
 
-location.href = "ujian.html";
+    await setDoc(doc(db, "peserta", uid), {
+      kodeUjian: tokenInput,
+      status: "belum_mulai",
+      lastOnline: serverTimestamp()
+    }, { merge: true });
 
+    // 💾 SESSION
+    sessionStorage.setItem("kodeUjian", tokenInput);
+    sessionStorage.setItem("bankSoalId", ujian.bankSoalId);
+    sessionStorage.setItem("durasiUjian", ujian.durasi);
+    sessionStorage.setItem("mapelUjian", ujian.mapel);
+    sessionStorage.setItem("judulUjian", ujian.judul);
+
+    location.href = "ujian.html";
 
   } catch (err) {
     console.error(err);
