@@ -86,15 +86,16 @@ if (soal.tipe === "mcma") {
 
 // ===== KATEGORI =====
 if (soal.tipe === "kategori") {
-  const hasil = [];
+  const hasil = new Array(soal.pernyataan.length).fill(null);
 
   document.querySelectorAll(`[data-kat="${soal.id}"]`).forEach((row, i) => {
     const pilih = row.querySelector("input:checked");
-    hasil.push(pilih ? pilih.value === "true" : null);
+    hasil[i] = pilih ? pilih.value === "true" : null;
   });
 
   jawabanSiswa.kategori[soal.id] = hasil;
 }
+
   if (soal.tipe === "essay") {
     const textarea = document.querySelector(
       `textarea[name="soal_${soal.id}"]`
@@ -233,12 +234,7 @@ function cekSoalKosong() {
 // ================= LOAD SOAL =================
 async function loadSoal() {
   soalContainer.innerHTML = "<p>Memuat soal...</p>";
-jawabanSiswa = {
-  pg: {},
-  mcma: {},
-  kategori: {},
-  essay: {}
-};
+
   try {
     const jadwalSnap = await getDoc(doc(db, "jadwal_ujian", kodeUjian));
     if (!jadwalSnap.exists()) {
@@ -263,35 +259,33 @@ jawabanSiswa = {
        .replace(/\s*\(.*?\)\s*/g, "")
        .trim();
 
-const soalPG = (bank.soalPG || []).map(s => ({
+const soalPG = (bank.soalPG || []).map((s, i) => ({
   tipe: "pg",
-  id: "pg_" + String(s.id),
+  id: s.id || "pg_" + i,
       pertanyaan: bersihkan(s.pertanyaan),
       opsi: s.opsi,
-      kunci: (s.jawabanBenar !== undefined ? s.jawabanBenar : s.kunci) || "",
+      kunci: s.jawabanBenar || s.kunci,
       skor: s.skor || 2
     }));
-const soalMCMA = (bank.soalMCMA || []).map(s => ({
+const soalMCMA = (bank.soalMCMA || []).map((s, i) => ({
   tipe: "mcma",
-  id: "mcma_" + String(s.id),
+  id: s.id || "mcma_" + i,
   pertanyaan: bersihkan(s.pertanyaan),
   opsi: s.opsi,
-  kunci: Array.isArray(s.jawabanBenar)
-  ? s.jawabanBenar
-  : [],
+  kunci: s.jawabanBenar || [],
   skor: s.skor || 2
 }));
 
-const soalKategori = (bank.soalKategori || []).map(s => ({
+const soalKategori = (bank.soalKategori || []).map((s, i) => ({
   tipe: "kategori",
-  id: "kat_" + String(s.id),
+  id: s.id || "kat_" + i,
   pertanyaan: bersihkan(s.pertanyaan),
   pernyataan: s.pernyataan || [],
   skor: s.skor || 2
 }));
-const soalEssay = (bank.soalEssay || []).map(s => ({
+const soalEssay = (bank.soalEssay || []).map((s, i) => ({
   tipe: "essay",
-  id: "essay_" + String(s.id),
+  id: s.id || "essay_" + i,
       pertanyaan: bersihkan(s.pertanyaan),
       skorMax: s.skorMax || 10
     }));
@@ -307,7 +301,6 @@ semuaSoal = [...soalPG, ...soalMCMA, ...soalKategori, ...soalEssay];
     soalContainer.innerHTML = "<p>Gagal memuat soal</p>";
   }
 }
-console.log("BANK SOAL:", bank);
 
 // ================= TAMPILKAN SOAL =================
 function tampilkanSoal() {
@@ -340,7 +333,7 @@ if (soal.tipe === "mcma") {
   html += `<div class="mcma-options">`;
 
   Object.entries(soal.opsi).forEach(([key, teks]) => {
-    const checked = (jawabanSiswa.mcma[soal.id] || []).includes(key);
+    const checked = jawabanSiswa.mcma[soal.id]?.includes(key);
 
     html += `
       <div class="opsi-row">
@@ -367,7 +360,7 @@ if (soal.tipe === "kategori") {
   html += `
     <table class="kategori-table">
       <thead>
-        <tr data-kat="${soal.id}">
+        <tr>
           <th>Pernyataan</th>
           <th>Benar</th>
           <th>Salah</th>
@@ -380,7 +373,7 @@ if (soal.tipe === "kategori") {
     const jawaban = jawabanSiswa.kategori[soal.id]?.[i];
 
     html += `
-      <tr>
+      <tr data-kat="${soal.id}">
         <td class="teks">${p.teks}</td>
 
         <td>
