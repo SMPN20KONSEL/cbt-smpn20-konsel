@@ -2,12 +2,14 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Ujian Selesai</title>
+
 <link rel="stylesheet" href="../assets/css/admin.css">
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
 <style>
   body {
     font-family: Arial, sans-serif;
@@ -16,6 +18,7 @@
     display:flex; justify-content:center; align-items:center;
     height:100vh;
   }
+
   .card {
     background:#fff;
     padding:30px 40px;
@@ -24,14 +27,26 @@
     text-align:center;
     max-width:500px;
   }
+
   h1 { color:#3b82f6; margin-bottom:20px; }
+
   .emoji {
     font-size:5rem;
     margin-bottom:20px;
     display:block;
     animation: bounce 1s infinite;
   }
-  p { font-size:1.1rem; margin-bottom:30px; }
+
+  .status {
+    font-size:14px;
+    margin-bottom:10px;
+  }
+
+  p {
+    font-size:1.1rem;
+    margin-bottom:30px;
+  }
+
   a.btn {
     display:inline-block;
     background:#3b82f6;
@@ -42,23 +57,32 @@
     font-weight:bold;
     transition:0.3s;
   }
+
   a.btn:hover { background:#2563eb; }
 
-  /* Animasi emoji */
   @keyframes bounce {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-15px); }
   }
 </style>
 </head>
+
 <body>
 
 <div class="card">
-  <span class="emoji" id="emoji">😄</span>
+  <span class="emoji" id="emoji">⏳</span>
   <h1>Ujian Selesai</h1>
-  <p id="pesan">Terima kasih telah menyelesaikan ujian.<br>Jawabanmu telah tersimpan dan akan dinilai oleh guru.</p>
-  <!-- Tombol kembali ke login -->
-  <a href="../login-siswa.html" class="btn"><i class="fa fa-sign-in"></i> Kembali ke Login</a>
+
+  <!-- ✅ STATUS (FIX BUG) -->
+  <div id="status" class="status">Memuat...</div>
+
+  <p id="pesan">
+    Terima kasih telah menyelesaikan ujian.
+  </p>
+
+  <a href="../login-siswa.html" class="btn">
+    <i class="fa fa-sign-in"></i> Kembali ke Login
+  </a>
 </div>
 
 <script type="module">
@@ -72,8 +96,9 @@ const emojiEl  = document.getElementById("emoji");
 const pesanEl  = document.getElementById("pesan");
 const statusEl = document.getElementById("status");
 
-// Default
-statusEl.textContent = "⏳ Memverifikasi jawaban di server...";
+// 🔄 default loading
+emojiEl.textContent = "⏳";
+statusEl.textContent = "Memverifikasi jawaban di server...";
 statusEl.style.color = "#f59e0b";
 
 if (!siswaUid || !kodeUjian) {
@@ -87,44 +112,52 @@ try {
   if (snap.exists()) {
     const data = snap.data();
 
-    // ✅ STATUS BERHASIL
-    statusEl.textContent = "✅ Jawaban berhasil tersimpan di Firebase";
+    statusEl.textContent = "✅ Jawaban tersimpan";
     statusEl.style.color = "#16a34a";
 
-    // Ambil nilai (sesuai struktur kamu)
-    const skor = data.totalNilai ?? null;
+    const skor = data.totalNilai;
 
-    if (skor !== null) {
-      if (skor < 50) emojiEl.textContent = "😢";
-      else if (skor <= 75) emojiEl.textContent = "🙂";
-      else emojiEl.textContent = "😄";
+    if (typeof skor === "number") {
+
+      // 🎯 EMOJI SESUAI NILAI (0–100)
+      if (skor < 50) {
+        emojiEl.textContent = "😢";
+      } else if (skor <= 75) {
+        emojiEl.textContent = "🙂";
+      } else {
+        emojiEl.textContent = "😄";
+      }
 
       pesanEl.innerHTML = `
-        Terima kasih telah menyelesaikan ujian.<br>
-        Nilai sementara: <b>${skor}</b>
+        Terima kasih telah mengikuti ujian.
       `;
+
+    } else {
+      emojiEl.textContent = "⚠️";
+      pesanEl.innerHTML = "Nilai belum tersedia.";
     }
 
   } else {
-    // ❌ DATA TIDAK DITEMUKAN
     emojiEl.textContent = "⚠️";
-    statusEl.textContent = "❌ Jawaban belum ditemukan di server";
+    statusEl.textContent = "❌ Data tidak ditemukan";
     statusEl.style.color = "#dc2626";
 
     pesanEl.innerHTML = `
-      Jawaban tidak ditemukan di database.<br>
-      Silakan hubungi pengawas atau guru.
+      Jawaban tidak ditemukan.<br>
+      Hubungi guru / pengawas.
     `;
   }
 
 } catch (err) {
   console.error(err);
+
   emojiEl.textContent = "❌";
-  statusEl.textContent = "Gagal menghubungi server Firebase";
+  statusEl.textContent = "Gagal mengambil data";
   statusEl.style.color = "#dc2626";
+
+  pesanEl.innerHTML = "Terjadi kesalahan koneksi ke server.";
 }
 </script>
-
 
 </body>
 </html>

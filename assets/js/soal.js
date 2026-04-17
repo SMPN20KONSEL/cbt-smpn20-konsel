@@ -19,7 +19,9 @@ const btnLogout     = document.getElementById("btnLogout");
 const modal         = document.getElementById("logoutModal");
 const cancelLogout  = document.getElementById("cancelLogout");
 const confirmLogout = document.getElementById("confirmLogout");
-
+const submitModal   = document.getElementById("submitModal");
+const cancelSubmit  = document.getElementById("cancelSubmit");
+const confirmSubmit = document.getElementById("confirmSubmit");
 // ================= SESSION =================
 const kodeUjian    = sessionStorage.getItem("kodeUjian");
 const namaSiswa   = sessionStorage.getItem("namaSiswa");
@@ -226,9 +228,7 @@ function cekSoalKosong() {
   }
 
   // ✅ kalau semua terisi
-  if (confirm("Semua soal sudah dijawab. Kirim ujian?")) {
-    simpanJawabanFirestore();
-  }
+submitModal.classList.add("show");
 }
 
 // ================= LOAD SOAL =================
@@ -644,6 +644,14 @@ confirmLogout.onclick = async () => {
   sessionStorage.clear();
   location.href = "login-siswa.html";
 };
+// ================= SUBMIT MODAL =================
+cancelSubmit.onclick = () => {
+  submitModal.classList.remove("show");
+};
 
+confirmSubmit.onclick = () => {
+  submitModal.classList.remove("show");
+  simpanJawabanFirestore();
+};
 // ================= INIT =================
 loadSoal(); 
