@@ -2,6 +2,7 @@
 * {
   box-sizing: border-box;
   font-family: "Segoe UI", Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -11,31 +12,35 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 16px;
 }
 
-/* ================= BACKGROUND SHAPE ================= */
+/* ================= BACKGROUND ================= */
 body::before {
   content: "";
   position: fixed;
-  top: -120px;
-  left: -120px;
+  top: -100px;
+  left: -100px;
   width: 60%;
   height: 60%;
   background: rgba(93, 164, 245, 0.08);
   transform: rotate(-12deg);
   border-radius: 40px;
+  z-index: 0;
 }
 
 /* ================= LOGIN BOX ================= */
 .login-box {
-  width: 380px;
+  width: 100%;
+  max-width: 380px;
   background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
-  padding: 35px 30px 30px;
+  border-radius: 14px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+  padding: 30px 22px;
   text-align: center;
   position: relative;
   z-index: 1;
+  animation: fadeIn 0.4s ease;
 }
 
 /* ================= LOGO ================= */
@@ -44,12 +49,12 @@ body::before {
   align-items: center;
   justify-content: center;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .login-logo img {
-  width: 42px;
-  height: 42px;
+  width: 40px;
+  height: 40px;
 }
 
 .login-logo div {
@@ -58,33 +63,32 @@ body::before {
 
 .login-logo strong {
   display: block;
-  font-size: 18px;
+  font-size: 16px;
   color: #1e4f8c;
-  letter-spacing: 0.5px;
 }
 
 .login-logo span {
-  font-size: 12px;
-  color: #5f7fa3;
+  font-size: 11px;
+  color: #6b7280;
 }
 
 /* ================= TEXT ================= */
 h2 {
   margin: 0;
-  font-size: 20px;
-  color: #444;
+  font-size: 18px;
+  color: #333;
 }
 
 p {
-  margin: 8px 0 25px;
-  font-size: 14px;
-  color: #777;
+  margin: 8px 0 20px;
+  font-size: 13px;
+  color: #666;
 }
 
 /* ================= INPUT ================= */
 .input-group {
   position: relative;
-  margin-bottom: 18px;
+  margin-bottom: 16px;
 }
 
 .input-group i {
@@ -93,22 +97,22 @@ p {
   left: 12px;
   transform: translateY(-50%);
   color: #9ca3af;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 .input-group input {
   width: 100%;
-  padding: 12px 40px;
+  padding: 12px 38px;
   font-size: 14px;
-  border-radius: 6px;
-  border: none;
-  border-bottom: 1px solid #cbd5e1;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
   outline: none;
-  transition: 0.3s;
+  transition: 0.2s;
 }
 
 .input-group input:focus {
-  border-bottom-color: #1e4f8c;
+  border-color: #1e4f8c;
+  box-shadow: 0 0 0 2px rgba(30, 79, 140, 0.1);
 }
 
 /* ================= TOGGLE PASSWORD ================= */
@@ -118,7 +122,6 @@ p {
   right: 12px;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #6b7280;
   font-size: 14px;
 }
 
@@ -131,10 +134,14 @@ button {
   border-radius: 999px;
   background: #0b78f6;
   color: #fff;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.2s;
+}
+
+button:active {
+  transform: scale(0.97);
 }
 
 button:hover {
@@ -143,194 +150,62 @@ button:hover {
 
 /* ================= ERROR ================= */
 #error {
-  margin-top: 15px;
-  font-size: 14px;
+  margin-top: 12px;
+  font-size: 13px;
   color: #dc2626;
 }
 
 /* ================= FOOTER ================= */
 .footer-text {
-  margin-top: 25px;
-  font-size: 12px;
+  margin-top: 20px;
+  font-size: 11px;
   color: #9ca3af;
 }
-/* =====================
-   TABLET & HP BESAR
-===================== */
-@media (max-width: 768px) {
-  .content {
-    margin-left: 0;
-    width: 100%;
-    border-radius: 0;
-    padding: 20px;
-  }
 
-  .form-row {
-    flex-direction: column;
-  }
-}
-
-/* =====================
-   HP NORMAL
-===================== */
-@media (max-width: 576px) {
-  .content {
-    padding: 16px;
-  }
-
-  input,
-  select,
-  textarea,
-  button {
-    width: 100%;
-    font-size: 14px;
-  }
-}
-
-/* =====================
-   HP KECIL
-===================== */
-@media (max-width: 360px) {
-  .content {
-    padding: 12px;
-  }
-
-  h1, h2, h3 {
-    font-size: 16px;
-  }
-
-  button {
-    padding: 10px;
-    font-size: 13px;
-  }
-}
-/* ================= SUPER RESPONSIVE LOGIN ================= */
-
-/* 🔥 FLEX BIAR AMAN DI SEMUA LAYAR */
-body {
-  padding: 15px;
-}
-
-/* ================= LOGIN BOX ================= */
-.login-box {
-  width: 100%;
-  max-width: 380px; /* tetap rapi di desktop */
-}
-
-/* ================= TABLET ================= */
-@media (max-width: 768px) {
-  .login-box {
-    padding: 28px 22px;
-  }
-
-  h2 {
-    font-size: 18px;
-  }
-
-  p {
-    font-size: 13px;
-  }
-}
-
-/* ================= HP NORMAL ================= */
+/* ================= MOBILE FIX ================= */
 @media (max-width: 480px) {
-
   body {
-    padding: 10px;
+    align-items: flex-start; /* 🔥 ini penting */
+    padding-top: 40px;
   }
 
   .login-box {
-    border-radius: 12px;
     padding: 24px 18px;
   }
 
+  body::before {
+    display: none;
+  }
+}
+
+/* ================= HP KECIL ================= */
+@media (max-width: 360px) {
   .login-logo strong {
+    font-size: 14px;
+  }
+
+  h2 {
     font-size: 16px;
   }
 
-  .login-logo span {
-    font-size: 11px;
-  }
-
-  h2 {
-    font-size: 17px;
-  }
-
-  p {
-    font-size: 13px;
-    margin-bottom: 18px;
-  }
-
-  .input-group input {
-    padding: 11px 36px;
-    font-size: 13px;
-  }
-
-  button {
-    font-size: 14px;
-    padding: 12px;
-  }
-}
-
-/* ================= HP KECIL (320px) ================= */
-@media (max-width: 360px) {
-
-  .login-box {
-    padding: 20px 14px;
-  }
-
-  .login-logo img {
-    width: 34px;
-    height: 34px;
-  }
-
-  .login-logo strong {
-    font-size: 14px;
-  }
-
-  h2 {
-    font-size: 15px;
-  }
-
   p {
     font-size: 12px;
   }
 
   .input-group input {
-    padding: 10px 32px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   button {
-    font-size: 13px;
-    padding: 10px;
+    font-size: 14px;
   }
 }
 
-/* ================= BACKGROUND FIX ================= */
-@media (max-width: 480px) {
-  body::before {
-    display: none; /* 🔥 biar tidak ganggu HP */
-  }
-}
-
-/* ================= TOUCH FRIENDLY ================= */
-button:active {
-  transform: scale(0.97);
-}
-
-/* ================= HILANGKAN TAP HIGHLIGHT ================= */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-.login-box {
-  animation: fadeIn 0.5s ease;
-}
-
+/* ================= ANIMATION ================= */
 @keyframes fadeIn {
   from {
     opacity: 0;
-    transform: translateY(15px);
+    transform: translateY(12px);
   }
   to {
     opacity: 1;
