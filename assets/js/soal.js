@@ -233,7 +233,12 @@ function cekSoalKosong() {
 // ================= LOAD SOAL =================
 async function loadSoal() {
   soalContainer.innerHTML = "<p>Memuat soal...</p>";
-
+jawabanSiswa = {
+  pg: {},
+  mcma: {},
+  kategori: {},
+  essay: {}
+};
   try {
     const jadwalSnap = await getDoc(doc(db, "jadwal_ujian", kodeUjian));
     if (!jadwalSnap.exists()) {
@@ -258,33 +263,35 @@ async function loadSoal() {
        .replace(/\s*\(.*?\)\s*/g, "")
        .trim();
 
-    const soalPG = (bank.soalPG || []).map(s => ({
-      tipe: "pg",
-      id: s.id,
+const soalPG = (bank.soalPG || []).map(s => ({
+  tipe: "pg",
+  id: "pg_" + String(s.id),
       pertanyaan: bersihkan(s.pertanyaan),
       opsi: s.opsi,
-      kunci: s.jawabanBenar || s.kunci,
+      kunci: (s.jawabanBenar !== undefined ? s.jawabanBenar : s.kunci) || "",
       skor: s.skor || 2
     }));
 const soalMCMA = (bank.soalMCMA || []).map(s => ({
   tipe: "mcma",
-  id: s.id,
+  id: "mcma_" + String(s.id),
   pertanyaan: bersihkan(s.pertanyaan),
   opsi: s.opsi,
-  kunci: s.jawabanBenar || [],
+  kunci: Array.isArray(s.jawabanBenar)
+  ? s.jawabanBenar
+  : [],
   skor: s.skor || 2
 }));
 
 const soalKategori = (bank.soalKategori || []).map(s => ({
   tipe: "kategori",
-  id: s.id,
+  id: "kat_" + String(s.id),
   pertanyaan: bersihkan(s.pertanyaan),
   pernyataan: s.pernyataan || [],
   skor: s.skor || 2
 }));
-    const soalEssay = (bank.soalEssay || []).map(s => ({
-      tipe: "essay",
-      id: s.id,
+const soalEssay = (bank.soalEssay || []).map(s => ({
+  tipe: "essay",
+  id: "essay_" + String(s.id),
       pertanyaan: bersihkan(s.pertanyaan),
       skorMax: s.skorMax || 10
     }));
@@ -300,6 +307,7 @@ semuaSoal = [...soalPG, ...soalMCMA, ...soalKategori, ...soalEssay];
     soalContainer.innerHTML = "<p>Gagal memuat soal</p>";
   }
 }
+console.log("BANK SOAL:", bank);
 
 // ================= TAMPILKAN SOAL =================
 function tampilkanSoal() {
@@ -332,7 +340,7 @@ if (soal.tipe === "mcma") {
   html += `<div class="mcma-options">`;
 
   Object.entries(soal.opsi).forEach(([key, teks]) => {
-    const checked = jawabanSiswa.mcma[soal.id]?.includes(key);
+    const checked = (jawabanSiswa.mcma[soal.id] || []).includes(key);
 
     html += `
       <div class="opsi-row">
@@ -359,7 +367,7 @@ if (soal.tipe === "kategori") {
   html += `
     <table class="kategori-table">
       <thead>
-        <tr>
+        <tr data-kat="${soal.id}">
           <th>Pernyataan</th>
           <th>Benar</th>
           <th>Salah</th>
