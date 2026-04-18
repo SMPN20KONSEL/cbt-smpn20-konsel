@@ -91,6 +91,7 @@ if (!snap.exists()) {
   // ✅ UPDATE (WAJIB hanya field yang diizinkan rules)
   await setDoc(pesertaRef, {
     status: "login",
+    loginAt: serverTimestamp(),
     lastOnline: serverTimestamp()
   }, { merge: true });
 }
