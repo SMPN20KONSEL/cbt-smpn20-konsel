@@ -373,10 +373,3 @@ textarea:focus {
     padding: 18px;
   }
 }
-.modal {
-  display: none;
-}
-
-.modal.show {
-  display: flex;
-}

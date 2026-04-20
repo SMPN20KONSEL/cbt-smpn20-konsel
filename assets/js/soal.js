@@ -629,22 +629,20 @@ document.addEventListener("paste", e => {
 });
 
 // ================= LOGOUT =================
+btnLogout.onclick = () => modal.classList.add("show");
+cancelLogout.onclick = () => modal.classList.remove("show");
+
+// hapus definisi lama confirmLogout.onclick
 confirmLogout.onclick = async () => {
-  try {
-    simpanJawaban();
+  simpanJawaban();
 
-    await setDoc(doc(db, "peserta", siswaUid), {
-      status: "keluar",
-      lastOnline: serverTimestamp()
-    }, { merge: true });
+  await setDoc(doc(db, "peserta", siswaUid), {
+    status: "keluar",
+    lastOnline: serverTimestamp()
+  }, { merge: true });
 
-  } catch (err) {
-    console.error("Logout error:", err);
-  }
-
-  // 🚀 PASTIKAN tetap redirect
   sessionStorage.clear();
-  window.location.href = "../login-siswa.html";
+  location.href = "../login-siswa.html";
 };
 // ================= SUBMIT MODAL =================
 cancelSubmit.onclick = () => {
