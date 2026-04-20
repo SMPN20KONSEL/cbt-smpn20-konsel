@@ -87,16 +87,49 @@
 
 <script type="module">
 import { db } from "../assets/js/firebase.js";
-import { doc, getDoc } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import { doc, getDoc, setDoc, serverTimestamp } 
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 const siswaUid  = sessionStorage.getItem("siswaUid");
 const kodeUjian = sessionStorage.getItem("kodeUjian");
 
-const emojiEl  = document.getElementById("emoji");
-const pesanEl  = document.getElementById("pesan");
-const statusEl = document.getElementById("status");
+const emojiEl   = document.getElementById("emoji");
+const pesanEl   = document.getElementById("pesan");
+const statusEl  = document.getElementById("status");
+const koneksiEl = document.getElementById("koneksi");
 
-// 🔄 default loading
+// ===============================
+// 🌐 DETEKSI ONLINE / OFFLINE
+// ===============================
+function updateKoneksi() {
+  if (navigator.onLine) {
+    koneksiEl.textContent = "🟢 Online";
+    koneksiEl.style.color = "#16a34a";
+  } else {
+    koneksiEl.textContent = "🔴 Offline";
+    koneksiEl.style.color = "#dc2626";
+
+    emojiEl.textContent = "📡";
+    statusEl.textContent = "Tidak ada koneksi internet";
+    statusEl.style.color = "#dc2626";
+
+    pesanEl.innerHTML = `
+      Perangkat kamu sedang offline.<br>
+      Pastikan internet aktif untuk melihat nilai.
+    `;
+  }
+}
+
+// jalankan awal
+updateKoneksi();
+
+// listener perubahan koneksi
+window.addEventListener("online", updateKoneksi);
+window.addEventListener("offline", updateKoneksi);
+
+// ===============================
+// 🔄 LOADING AWAL
+// ===============================
 emojiEl.textContent = "⏳";
 statusEl.textContent = "Memverifikasi jawaban di server...";
 statusEl.style.color = "#f59e0b";
@@ -105,6 +138,14 @@ if (!siswaUid || !kodeUjian) {
   window.location.href = "../login-siswa.html";
 }
 
+// ⛔ kalau offline, hentikan proses
+if (!navigator.onLine) {
+  throw new Error("Offline mode");
+}
+
+// ⏳ delay
+await new Promise(r => setTimeout(r, 1000));
+
 try {
   const ref = doc(db, "jawaban_siswa", `${siswaUid}_${kodeUjian}`);
   const snap = await getDoc(ref);
@@ -112,30 +153,60 @@ try {
   if (snap.exists()) {
     const data = snap.data();
 
+    console.log("DATA FIRESTORE:", data);
+
     statusEl.textContent = "✅ Jawaban tersimpan";
     statusEl.style.color = "#16a34a";
 
-    const skor = data.totalNilai;
+    let skor = 0;
+    let totalSoal = 0;
+    let benar = 0;
 
-    if (typeof skor === "number") {
+    const jawaban = data.detailJawaban || data.jawaban || null;
 
-      // 🎯 EMOJI SESUAI NILAI (0–100)
-      if (skor < 50) {
-        emojiEl.textContent = "😢";
-      } else if (skor <= 75) {
-        emojiEl.textContent = "🙂";
-      } else {
-        emojiEl.textContent = "😄";
+    if (jawaban) {
+
+      if (Array.isArray(jawaban)) {
+        totalSoal = jawaban.length;
+        benar = jawaban.filter(j => j.benar === true).length;
       }
 
-      pesanEl.innerHTML = `
-        Terima kasih telah mengikuti ujian.
-      `;
+      else if (typeof jawaban === "object") {
+        const list = Object.values(jawaban);
+        totalSoal = list.length;
+        benar = list.filter(j => j.benar === true).length;
+      }
 
-    } else {
+      if (totalSoal > 0) {
+        skor = (benar / totalSoal) * 100;
+      }
+    }
+
+    if (skor === 0 && data.totalNilai != null) {
+      skor = Number(data.totalNilai);
+    }
+
+    if (isNaN(skor)) {
       emojiEl.textContent = "⚠️";
       pesanEl.innerHTML = "Nilai belum tersedia.";
+      return;
     }
+
+    // 🎯 EMOJI
+    if (skor < 50) {
+      emojiEl.textContent = "😢";
+    } else if (skor <= 75) {
+      emojiEl.textContent = "🙂";
+    } else {
+      emojiEl.textContent = "😄";
+    }
+
+    pesanEl.innerHTML = `
+      Terima kasih telah mengikuti ujian.<br><br>
+      Jumlah soal: <b>${totalSoal}</b><br>
+      Jawaban benar: <b>${benar}</b><br>
+      Nilai kamu: <b>${Math.round(skor)}</b>
+    `;
 
   } else {
     emojiEl.textContent = "⚠️";
@@ -149,7 +220,9 @@ try {
   }
 
 } catch (err) {
-  console.error(err);
+  console.error("ERROR:", err);
+
+  if (!navigator.onLine) return;
 
   emojiEl.textContent = "❌";
   statusEl.textContent = "Gagal mengambil data";
@@ -157,6 +230,25 @@ try {
 
   pesanEl.innerHTML = "Terjadi kesalahan koneksi ke server.";
 }
+const btnLogin = document.querySelector("a.btn");
+
+btnLogin.addEventListener("click", async (e) => {
+  e.preventDefault(); // tahan dulu pindah halaman
+
+  try {
+    if (siswaUid) {
+      await setDoc(doc(db, "peserta", siswaUid), {
+        status: "offline",
+        lastOnline: serverTimestamp()
+      }, { merge: true });
+    }
+  } catch (err) {
+    console.error("Gagal update status offline:", err);
+  }
+
+  // setelah update baru pindah halaman
+  window.location.href = "../login-siswa.html";
+});
 </script>
 
 </body>
