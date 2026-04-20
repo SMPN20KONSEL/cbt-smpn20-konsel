@@ -254,11 +254,11 @@ async function loadSoal() {
 
     const bank = bankSnap.data();
 
-    const bersihkan = t =>
-      t.replace(/^\s*\d+[\.\)]?\s*/, "")
-       .replace(/\s*\(.*?\)\s*/g, "")
-       .trim();
-
+  const bersihkan = t =>
+  t.replace(/^\s*\d+[\.\)]\s+/, "") // WAJIB ada titik / kurung + spasi
+   .replace(/\s*\(.*?\)\s*/g, "")
+   .trim();
+   
 const soalPG = (bank.soalPG || []).map((s, i) => ({
   tipe: "pg",
   id: s.id || "pg_" + i,

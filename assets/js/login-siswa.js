@@ -69,38 +69,37 @@ async function login() {
     sessionStorage.setItem("namaSiswa", siswa.nama);
     sessionStorage.setItem("kelasSiswa", siswa.kelas);
 
-    // ===============================
-    // 🔥 TAMBAHAN PENTING (TRACKING LOGIN)
-    // ===============================
-    const pesertaRef = doc(db, "peserta", uid);
-const snap = await getDoc(pesertaRef);
+// ===============================
+// 🔥 TRACKING LOGIN (FIX FINAL)
+// ===============================
+const pesertaRef = doc(db, "peserta", uid);
 
-if (!snap.exists()) {
-  // ✅ CREATE (boleh isi semua field)
-  await setDoc(pesertaRef, {
-    uid,
-    nis: nisDB,
-    nama: siswa.nama,
-    kelas: siswa.kelas,
-    email,
-    status: "login",
-    loginAt: serverTimestamp(),
-    lastOnline: serverTimestamp()
-  });
-} else {
-  // ✅ UPDATE (WAJIB hanya field yang diizinkan rules)
-  await setDoc(pesertaRef, {
-    status: "login",
-    loginAt: serverTimestamp(),
-    lastOnline: serverTimestamp()
-  }, { merge: true });
-}
-setInterval(async () => {
-  await setDoc(doc(db, "peserta", uid), {
-    lastOnline: serverTimestamp()
-  }, { merge: true });
+await setDoc(pesertaRef, {
+  uid,
+  nis: nisDB,
+  nama: siswa.nama,
+  kelas: siswa.kelas,
+  email,
+  status: "login",
+  loginAt: serverTimestamp(),
+  lastOnline: serverTimestamp()
+}, { merge: true });
+
+// update online tiap 30 detik
+const interval = setInterval(async () => {
+  try {
+    await setDoc(pesertaRef, {
+      lastOnline: serverTimestamp()
+    }, { merge: true });
+  } catch (e) {
+    console.log("Update gagal:", e);
+  }
 }, 30000);
 
+// stop saat keluar halaman
+window.addEventListener("beforeunload", () => {
+  clearInterval(interval);
+});
     // 🚀 MASUK HALAMAN TOKEN
     location.href = "./siswa/token.html";
 
