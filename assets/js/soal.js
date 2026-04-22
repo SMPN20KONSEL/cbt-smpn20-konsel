@@ -124,40 +124,64 @@ document.addEventListener("change", (e) => {
 
 // ================= HITUNG NILAI =================
 function hitungNilai() {
-  let totalNilai = 0;
+  let skorDapat = 0;
+  let skorMax   = 0;
 
   semuaSoal.forEach(soal => {
 
     // ===== PG =====
     if (soal.tipe === "pg") {
+      const max = soal.skor || 2;
+      skorMax += max;
+
       if ((jawabanSiswa.pg[soal.id] || "") === soal.kunci) {
-        totalNilai += 2;
+        skorDapat += max;
       }
     }
 
     // ===== MCMA =====
-    if (soal.tipe === "mcma") {
-      const kunci = soal.kunci || [];
-      const jawaban = jawabanSiswa.mcma[soal.id] || [];
+if (soal.tipe === "mcma") {
+  const kunci = soal.kunci || [];
+  const jawaban = jawabanSiswa.mcma[soal.id] || [];
+  const semuaOpsi = Object.keys(soal.opsi || {});
 
-      let benarDipilih = 0;
+  const max = soal.skor || 2;
+  skorMax += max;
 
-      jawaban.forEach(j => {
-        if (kunci.includes(j)) {
-          benarDipilih++;
-        }
-      });
+  let benar = 0;
+  let salah = 0;
 
-      if (kunci.length > 0) {
-        let skor = (benarDipilih / kunci.length) * 2;
-        totalNilai += skor;
-      }
+  jawaban.forEach(j => {
+    if (kunci.includes(j)) {
+      benar++;
+    } else {
+      salah++;
     }
+  });
+
+  const jumlahKunci = kunci.length;
+  const jumlahSalahOpsi = semuaOpsi.length - jumlahKunci;
+
+  let skor = 0;
+
+  if (jumlahKunci > 0 && jumlahSalahOpsi > 0) {
+    skor =
+      (benar / jumlahKunci) -
+      (salah / jumlahSalahOpsi);
+  }
+
+  if (skor < 0) skor = 0;
+
+  skorDapat += skor * max;
+}
 
     // ===== KATEGORI =====
     if (soal.tipe === "kategori") {
       const pernyataan = soal.pernyataan || [];
       const jawaban = jawabanSiswa.kategori[soal.id] || [];
+
+      const max = soal.skor || 2;
+      skorMax += max;
 
       let benar = 0;
 
@@ -167,18 +191,23 @@ function hitungNilai() {
         }
       });
 
-      if (pernyataan.length > 0) {
-        let skor = (benar / pernyataan.length) * 2;
-        totalNilai += skor;
-      }
+      let skor = pernyataan.length > 0
+        ? (benar / pernyataan.length)
+        : 0;
+
+      skorDapat += skor * max;
     }
 
   });
 
+  // 🔥 NORMALISASI KE 100
+  const nilaiPG =
+    skorMax === 0 ? 0 : (skorDapat / skorMax) * 100;
+
   return {
-    nilaiPG: totalNilai,
+    nilaiPG: Number(nilaiPG.toFixed(2)),
     nilaiEssay: 0,
-    totalNilai: Math.round(totalNilai)
+    totalNilai: Math.round(nilaiPG)
   };
 }
 
