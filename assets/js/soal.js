@@ -266,16 +266,19 @@ async function loadSoal() {
 
   try {
     const jadwalSnap = await getDoc(doc(db, "jadwal_ujian", kodeUjian));
+
     if (!jadwalSnap.exists()) {
       soalContainer.innerHTML = "<p>Jadwal tidak ditemukan</p>";
       return;
     }
 
     const jadwal = jadwalSnap.data();
+
     mapelUjian = jadwal.mapel || "";
     judulUjian = jadwal.judul || "";
 
     const bankSnap = await getDoc(doc(db, "bank_soal", jadwal.bankSoalId));
+
     if (!bankSnap.exists()) {
       soalContainer.innerHTML = "<p>Bank soal tidak ditemukan</p>";
       return;
@@ -593,16 +596,19 @@ sudahSelesai = true;
   const docId = `${siswaUid}_${kodeUjian}`;
 
   try {
-    await setDoc(doc(db, "jawaban_siswa", docId), {
+await setDoc(doc(db, "jawaban_siswa", docId), {
   siswaUid,
-  nis: sessionStorage.getItem("nisSiswa"),
   namaSiswa,
   kelas: kelasSiswa,
-  kodeUjian,
   mapel: mapelUjian,
-  judulUjian,
+
+  // 🔥 PENTING
+  guruId: jadwal.guruId,
+  bankSoalId: jadwal.bankSoalId,
 
   jawabanPG: jawabanSiswa.pg,
+  jawabanMCMA: jawabanSiswa.mcma,
+  jawabanKategori: jawabanSiswa.kategori,
   jawabanEssay: jawabanSiswa.essay,
 
   nilaiPG: nilai.nilaiPG,
