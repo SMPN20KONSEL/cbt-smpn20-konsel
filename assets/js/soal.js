@@ -614,7 +614,7 @@ await setDoc(doc(db, "jawaban_siswa", docId), {
   nilaiPG: nilai.nilaiPG,
   nilaiEssay: nilai.nilaiEssay,
   totalNilai: nilai.totalNilai,
-
+  statusNilai: "belum",
   waktu_mulai: serverTimestamp(),
   waktu_selesai: serverTimestamp()
 });
