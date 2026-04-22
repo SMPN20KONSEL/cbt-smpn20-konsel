@@ -50,9 +50,9 @@ let jawabanSiswa = {
   essay: {}
 };
 
+let jadwal = {};
 let mapelUjian = "";
 let judulUjian = "";
-
 // ================= STORAGE KEY =================
 const LS_JAWABAN_KEY = `jawaban_${siswaUid}_${kodeUjian}`;
 const LS_WAKTU_KEY   = `waktu_${siswaUid}_${kodeUjian}`;
@@ -272,7 +272,8 @@ async function loadSoal() {
       return;
     }
 
-    const jadwal = jadwalSnap.data();
+    // ✅ SIMPAN GLOBAL
+    jadwal = jadwalSnap.data();
 
     mapelUjian = jadwal.mapel || "";
     judulUjian = jadwal.judul || "";
@@ -285,6 +286,8 @@ async function loadSoal() {
     }
 
     const bank = bankSnap.data();
+
+    // (bagian mapping soal biarkan seperti punyamu)
 
   const bersihkan = t =>
   t.replace(/^\s*\d+[\.\)]\s+/, "") // WAJIB ada titik / kurung + spasi
@@ -530,22 +533,22 @@ const intervalTimer = setInterval(() => {
     `${m.toString().padStart(2, "0")}:${d.toString().padStart(2, "0")}`;
 
   // ⏰ WAKTU HABIS
-  if (waktu <= 0) {
-    clearInterval(intervalTimer);
-    localStorage.removeItem(LS_WAKTU_KEY);
+if (waktu <= 0) {
+  clearInterval(intervalTimer);
+  localStorage.removeItem(LS_WAKTU_KEY);
 
-    tampilkanToast("⏰ Waktu habis! Jawaban dikirim otomatis.");
+  tampilkanToast("⏰ Waktu habis! Jawaban dikirim otomatis.");
 
-    // ⛔ cegah klik & input lagi
-    btnNext.disabled = true;
-    btnPrev.disabled = true;
-    document
-      .querySelectorAll("input, textarea")
-      .forEach(el => el.disabled = true);
+  btnNext.disabled = true;
+  btnPrev.disabled = true;
 
-    simpanJawabanFirestore();
-    return; // ⛔ STOP interval
-  }
+  document.querySelectorAll("input, textarea")
+    .forEach(el => el.disabled = true);
+
+  simpanJawaban(); // 🔥 WAJIB
+  simpanJawabanFirestore();
+  return;
+}
 
   waktu--;
   localStorage.setItem(LS_WAKTU_KEY, waktu);
@@ -589,53 +592,63 @@ async function lepasSesiUjian() {
 // ================= SIMPAN FIRESTORE =================
 async function simpanJawabanFirestore() {
   if (sudahDikirim) return;
-sudahDikirim = true;
-sudahSelesai = true;
+simpanJawaban();
+  // ❗ CEGAH ERROR JIKA JADWAL BELUM ADA
+  if (!jadwal || !jadwal.guruId) {
+    console.error("❌ Jadwal belum siap!");
+    tampilkanToast("Terjadi kesalahan, coba lagi...");
+    return;
+  }
+
+  sudahDikirim = true;
+  sudahSelesai = true;
 
   const nilai = hitungNilai();
   const docId = `${siswaUid}_${kodeUjian}`;
 
   try {
-await setDoc(doc(db, "jawaban_siswa", docId), {
-  siswaUid,
-  namaSiswa,
-  kelas: kelasSiswa,
-  mapel: mapelUjian,
+    await setDoc(doc(db, "jawaban_siswa", docId), {
+      siswaUid,
+      namaSiswa,
+      kelas: kelasSiswa,
+      mapel: mapelUjian,
 
-  // 🔥 PENTING
-  guruId: jadwal.guruId,
-  bankSoalId: jadwal.bankSoalId,
+      // ✅ FIX AMAN
+      guruId: jadwal.guruId || "",
+      bankSoalId: jadwal.bankSoalId || "",
 
-  jawabanPG: jawabanSiswa.pg,
-  jawabanMCMA: jawabanSiswa.mcma,
-  jawabanKategori: jawabanSiswa.kategori,
-  jawabanEssay: jawabanSiswa.essay,
+      judulUjian: judulUjian,
 
-  nilaiPG: nilai.nilaiPG,
-  nilaiEssay: nilai.nilaiEssay,
-  totalNilai: nilai.totalNilai,
-  statusNilai: "belum",
-  waktu_mulai: serverTimestamp(),
-  waktu_selesai: serverTimestamp()
-});
+      jawabanPG: jawabanSiswa.pg,
+      jawabanMCMA: jawabanSiswa.mcma,
+      jawabanKategori: jawabanSiswa.kategori,
+      jawabanEssay: jawabanSiswa.essay,
 
-// 🔥 TAMBAHAN WAJIB
-await setDoc(doc(db, "peserta", siswaUid), {
-  status: "selesai",
-  lastOnline: serverTimestamp()
-}, { merge: true });
+      nilaiPG: nilai.nilaiPG,
+      nilaiEssay: nilai.nilaiEssay,
+      totalNilai: nilai.totalNilai,
+
+      statusNilai: "belum",
+
+      waktu_mulai: serverTimestamp(),
+      waktu_selesai: serverTimestamp()
+    });
+
+    // ✅ UPDATE STATUS SISWA
+    await setDoc(doc(db, "peserta", siswaUid), {
+      status: "selesai",
+      lastOnline: serverTimestamp()
+    }, { merge: true });
 
     console.log("✅ Jawaban tersimpan");
 
   } catch (err) {
     console.error("❌ Firestore error:", err);
   } finally {
-    // 🚀 Set flag kirim
     localStorage.setItem(LS_KIRIM_KEY, "true");
     localStorage.removeItem(LS_JAWABAN_KEY);
     localStorage.removeItem(LS_WAKTU_KEY);
 
-    // lepas multi login
     await lepasSesiUjian();
 
     setTimeout(() => {
@@ -643,6 +656,7 @@ await setDoc(doc(db, "peserta", siswaUid), {
     }, 300);
   }
 }
+
 
 // Mencegah klik kanan, copy, dan print screen
 document.addEventListener("contextmenu", e => e.preventDefault());
@@ -686,6 +700,7 @@ cancelSubmit.onclick = () => {
 
 confirmSubmit.onclick = () => {
   submitModal.classList.remove("show");
+  simpanJawaban(); // WAJIB
   simpanJawabanFirestore();
 };
 // ================= INIT =================
