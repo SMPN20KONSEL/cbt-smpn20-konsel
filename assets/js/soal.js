@@ -294,36 +294,40 @@ async function loadSoal() {
    .replace(/\s*\(.*?\)\s*/g, "")
    .trim();
    
-const soalPG = (bank.soalPG || []).map((s, i) => ({
+let counter = 0;
+
+const soalPG = (bank.soalPG || []).map((s) => ({
   tipe: "pg",
-  id: s.id || "pg_" + i,
-      pertanyaan: bersihkan(s.pertanyaan),
-      opsi: s.opsi,
-      kunci: s.jawabanBenar || s.kunci,
-      skor: s.skor || 2
-    }));
-const soalMCMA = (bank.soalMCMA || []).map((s, i) => ({
+  id: counter++,
+  pertanyaan: bersihkan(s.pertanyaan),
+  opsi: s.opsi,
+  kunci: s.jawabanBenar || s.kunci,
+  skor: s.skor || 2
+}));
+
+const soalMCMA = (bank.soalMCMA || []).map((s) => ({
   tipe: "mcma",
-  id: s.id || "mcma_" + i,
+  id: counter++,
   pertanyaan: bersihkan(s.pertanyaan),
   opsi: s.opsi,
   kunci: s.jawabanBenar || [],
   skor: s.skor || 2
 }));
 
-const soalKategori = (bank.soalKategori || []).map((s, i) => ({
+const soalKategori = (bank.soalKategori || []).map((s) => ({
   tipe: "kategori",
-  id: s.id || "kat_" + i,
+  id: counter++,
   pertanyaan: bersihkan(s.pertanyaan),
   pernyataan: s.pernyataan || [],
   skor: s.skor || 2
 }));
-const soalEssay = (bank.soalEssay || []).map((s, i) => ({
+
+const soalEssay = (bank.soalEssay || []).map((s) => ({
   tipe: "essay",
-  id: s.id || "essay_" + i,
-      pertanyaan: bersihkan(s.pertanyaan),
-      skorMax: s.skorMax || 10
-    }));
+  id: counter++,
+  pertanyaan: bersihkan(s.pertanyaan),
+  skorMax: s.skorMax || 20
+}));
 
 semuaSoal = [...soalPG, ...soalMCMA, ...soalKategori, ...soalEssay];
     const cache = localStorage.getItem(LS_JAWABAN_KEY);
@@ -439,9 +443,7 @@ if (soal.tipe === "kategori") {
 
   if (soal.tipe === "essay") {
     html += `
-      <textarea name="soal_${soal.id}" rows="4">
-${jawabanSiswa.essay[soal.id] || ""}
-      </textarea>
+      <textarea name="soal_${soal.id}" rows="4">${jawabanSiswa.essay[soal.id] || ""}</textarea>
     `;
   }
 
@@ -574,9 +576,7 @@ if (localStorage.getItem(LS_KIRIM_KEY) === "true") {
 document.addEventListener("paste", e => {
   if (e.target.tagName === "TEXTAREA") e.preventDefault();
 });
-document.addEventListener("copy", e => {
-  if (e.target.tagName === "TEXTAREA") e.preventDefault();
-});
+
 
 // ================= LEPAS MULTI LOGIN =================
 async function lepasSesiUjian() {
@@ -630,7 +630,7 @@ simpanJawaban();
 
       statusNilai: "belum",
 
-      waktu_mulai: serverTimestamp(),
+      waktu_mulai: waktuMulai,
       waktu_selesai: serverTimestamp()
     });
 
