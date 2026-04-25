@@ -5,74 +5,63 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Token Ujian</title>
 
-  <!-- CSS (reuse login style) -->
-  <link rel="stylesheet" href="../assets/css/login.css">
+  <link rel="stylesheet" href="../assets/css/token.css">
 </head>
-
-<body>
 
 <body>
 
 <div class="wrapper">
 
+  <!-- ================= CARD TOKEN ================= -->
   <div class="card input-card">
 
-      <div class="login-logo">
-        <img src="../assets/img/logo-sekolah.png" alt="Logo Sekolah">
-        <div>
-          <strong>SMPN 20 KONAWE SELATAN</strong>
-          <span>CBT Application</span>
-        </div>
+    <div class="login-logo">
+      <img src="../assets/img/logo-sekolah.png" alt="Logo Sekolah">
+      <div>
+        <strong>SMPN 20 KONAWE SELATAN</strong>
+        <span>CBT Application</span>
       </div>
-
-      <h2>Token Ujian</h2>
-      <p>Masukkan token yang diberikan guru untuk memulai ujian</p>
-
-      <div class="input-group">
-        <input
-          type="text"
-          id="token"
-          placeholder="Masukkan Token Ujian"
-          autocomplete="off"
-        >
-      </div>
-
-      <button onclick="verifyToken()">Mulai Ujian</button>
-
-      <div id="error"></div>
-
-      <p class="footer-text">© 2026 Sistem Ujian Sekolah</p>
-
     </div>
 
+    <h2>Token Ujian</h2>
+    <p>Masukkan token yang diberikan guru untuk memulai ujian</p>
 
-    <!-- ================= CARD PERATURAN ================= -->
-    <div class="card rules-card">
+    <div class="input-group">
+      <input type="text" id="token" placeholder="Masukkan Token Ujian" autocomplete="off">
+    </div>
 
-      <h3>Peraturan Ujian</h3>
+    <button onclick="verifyToken()">Mulai Ujian</button>
 
-      <ol>
-        <li>Peserta wajib mengerjakan ujian secara mandiri.</li>
-        <li>Dilarang membuka tab atau aplikasi lain.</li>
-        <li>Dilarang bekerja sama atau berkomunikasi.</li>
-        <li>Dilarang menyebarkan soal ujian.</li>
-        <li>Keluar dari halaman dianggap pelanggaran.</li>
-      </ol>
+    <div id="error"></div>
 
-      <div class="warning">
-        <strong>Peringatan:</strong>
-        Jika terdeteksi pelanggaran, sistem akan otomatis mengakhiri ujian 
-        dan mengirim jawaban yang telah dikerjakan tanpa pemberitahuan.
-      </div>
+    <p class="footer-text">© 2026 Sistem Ujian Sekolah</p>
 
+  </div>
+
+  <!-- ================= CARD PERATURAN ================= -->
+  <div class="card rules-card">
+
+    <h3>Peraturan Ujian</h3>
+
+    <ol>
+      <li>Peserta wajib mengerjakan ujian secara mandiri.</li>
+      <li>Dilarang membuka tab atau aplikasi lain.</li>
+      <li>Dilarang bekerja sama atau berkomunikasi.</li>
+      <li>Dilarang menyebarkan soal ujian.</li>
+      <li>Keluar dari halaman dianggap pelanggaran.</li>
+    </ol>
+
+    <div class="warning">
+      <strong>Peringatan:</strong>
+      Jika terdeteksi pelanggaran, sistem akan otomatis mengakhiri ujian 
+      dan mengirim jawaban yang telah dikerjakan tanpa pemberitahuan.
     </div>
 
   </div>
 
-</body>
+</div>
 
-  <!-- JAVASCRIPT -->
-  <script type="module" src="../assets/js/token.js"></script>
+<script type="module" src="../assets/js/token.js"></script>
 
 </body>
 </html>
