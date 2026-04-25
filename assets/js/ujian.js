@@ -59,8 +59,17 @@ async function loadMapel() {
 
 loadMapel();
 
-// ================= MULAI UJIAN =================
+function masukFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen) {
+    el.requestFullscreen();
+  }
+}
+
 btnMulai.onclick = async () => {
+
+  // 🔥 WAJIB: paksa fullscreen dulu
+  masukFullscreen();
 
   await setDoc(doc(db, "peserta", uid), {
     status: "mengerjakan",
@@ -69,5 +78,14 @@ btnMulai.onclick = async () => {
   }, { merge: true });
 
   sessionStorage.setItem("waktuMulai", Date.now());
-  location.href = "soal.html";
+
+  // beri delay kecil biar fullscreen aktif dulu
+  setTimeout(() => {
+    location.href = "soal.html";
+  }, 500);
 };
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    alert("Jangan pindah tab sebelum ujian dimulai!");
+  }
+});
