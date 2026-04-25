@@ -50,30 +50,39 @@ body {
 /* ================= WRAPPER ================= */
 .wrapper {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
   padding: 20px;
 }
 
 /* ================= CARD ================= */
 .card {
   width: 100%;
-  max-width: 500px;
+  max-width: 520px;
   background: white;
-  border-radius: 12px;
-  padding: 25px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+  border-radius: 14px;
+  padding: 22px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: 0.2s;
+}
+
+/* hover desktop */
+.card:hover {
+  transform: translateY(-2px);
 }
 
 /* ================= TITLE ================= */
 .card h3 {
-  margin-top: 0;
+  margin: 0 0 12px;
   text-align: center;
   color: #1e293b;
+  font-size: 16px;
 }
 
 /* ================= DATA ================= */
 .data {
-  margin-top: 20px;
+  margin-top: 10px;
 }
 
 .item {
@@ -96,17 +105,17 @@ body {
 
 /* ================= BUTTON ================= */
 .btn-mulai {
-  margin-top: 25px;
+  margin-top: 18px;
   width: 100%;
-  padding: 14px;
+  padding: 11px;
   border: none;
-  border-radius: 999px;
+  border-radius: 10px;
   background: #0b78f6;
   color: white;
-  font-size: 15px;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s;
+  transition: 0.2s;
 }
 
 .btn-mulai:hover {
@@ -115,6 +124,36 @@ body {
 
 .btn-mulai:active {
   transform: scale(0.97);
+}
+
+/* ================= RULES ================= */
+.rules-card ol {
+  padding-left: 18px;
+  margin-top: 10px;
+}
+
+.rules-card li {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* ================= WARNING ================= */
+.warning {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+  border: 1px solid #ef4444;
+  font-size: 13px;
+  color: #7f1d1d;
+  line-height: 1.6;
+  font-weight: 500;
+}
+
+.warning::before {
+  content: "⚠️ ";
 }
 
 /* ================= RESPONSIVE ================= */
@@ -129,31 +168,24 @@ body {
     padding: 10px;
   }
 
-  .brand-text strong {
-    font-size: 13px;
-  }
-
-  .brand-text small {
-    font-size: 10px;
-  }
-
   .wrapper {
-    padding: 10px;
+    padding: 12px;
+    gap: 14px;
   }
 
   .card {
     padding: 18px;
-    border-radius: 10px;
+    border-radius: 12px;
   }
 
   .card h3 {
-    font-size: 16px;
+    font-size: 15px;
   }
 
   .item {
     flex-direction: column;
     align-items: flex-start;
-    gap: 4px;
+    gap: 3px;
   }
 
   .item span {
@@ -161,28 +193,36 @@ body {
   }
 
   .btn-mulai {
-    font-size: 14px;
-    padding: 12px;
-  }
-}
-
-/* 📱 HP kecil */
-@media (max-width: 360px) {
-  .card {
-    padding: 15px;
-  }
-
-  .card h3 {
-    font-size: 15px;
-  }
-
-  .btn-mulai {
     font-size: 13px;
     padding: 10px;
   }
 }
 
-/* 🔥 TOUCH FIX */
+/* 📲 TABLET */
+@media (min-width: 481px) and (max-width: 900px) {
+
+  .wrapper {
+    padding: 20px;
+  }
+
+  .card {
+    max-width: 600px;
+  }
+}
+
+/* 💻 DESKTOP BESAR */
+@media (min-width: 901px) {
+
+  .wrapper {
+    padding: 30px;
+  }
+
+  .card {
+    max-width: 520px;
+  }
+}
+
+/* ================= TOUCH FIX ================= */
 * {
   -webkit-tap-highlight-color: transparent;
 }
