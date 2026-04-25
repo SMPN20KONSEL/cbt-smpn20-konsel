@@ -729,7 +729,7 @@ simpanJawaban();
 
     setTimeout(() => {
       window.location.replace("selesai.html");
-    }, 300);
+    }, 1200); // kasih waktu Firestore commit
   }
 }
 

@@ -11,59 +11,53 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f5f5;
-    margin:0; padding:0;
-    display:flex; justify-content:center; align-items:center;
-    height:100vh;
-  }
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f5f5f5;
+  margin:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
 
-  .card {
-    background:#fff;
-    padding:30px 40px;
-    border-radius:10px;
-    box-shadow:0 3px 10px rgba(0,0,0,0.1);
-    text-align:center;
-    max-width:500px;
-  }
+.card {
+  background:#fff;
+  padding:30px 40px;
+  border-radius:10px;
+  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  text-align:center;
+  max-width:500px;
+}
 
-  h1 { color:#3b82f6; margin-bottom:20px; }
+h1 { color:#3b82f6; }
 
-  .emoji {
-    font-size:5rem;
-    margin-bottom:20px;
-    display:block;
-    animation: bounce 1s infinite;
-  }
+.emoji {
+  font-size:5rem;
+  margin-bottom:15px;
+  display:block;
+  animation: bounce 1s infinite;
+}
 
-  .status {
-    font-size:14px;
-    margin-bottom:10px;
-  }
+.status {
+  font-size:14px;
+  margin-bottom:8px;
+}
 
-  p {
-    font-size:1.1rem;
-    margin-bottom:30px;
-  }
+a.btn {
+  display:inline-block;
+  background:#3b82f6;
+  color:#fff;
+  padding:12px 25px;
+  border-radius:6px;
+  text-decoration:none;
+  font-weight:bold;
+}
 
-  a.btn {
-    display:inline-block;
-    background:#3b82f6;
-    color:#fff;
-    padding:12px 25px;
-    border-radius:6px;
-    text-decoration:none;
-    font-weight:bold;
-    transition:0.3s;
-  }
-
-  a.btn:hover { background:#2563eb; }
-
-  @keyframes bounce {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-15px); }
-  }
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
 </style>
 </head>
 
@@ -73,12 +67,10 @@
   <span class="emoji" id="emoji">⏳</span>
   <h1>Ujian Selesai</h1>
 
-  <!-- ✅ STATUS (FIX BUG) -->
   <div id="status" class="status">Memuat...</div>
+  <div id="koneksi" class="status"></div>
 
-  <p id="pesan">
-    Terima kasih telah menyelesaikan ujian.
-  </p>
+  <p id="pesan">Memproses data...</p>
 
   <a href="../login-siswa.html" class="btn">
     <i class="fa fa-sign-in"></i> Kembali ke Login
@@ -98,10 +90,10 @@ const pesanEl   = document.getElementById("pesan");
 const statusEl  = document.getElementById("status");
 const koneksiEl = document.getElementById("koneksi");
 
-// ===============================
-// 🌐 DETEKSI ONLINE / OFFLINE
-// ===============================
+// ================= KONEKSI =================
 function updateKoneksi() {
+  if (!koneksiEl) return;
+
   if (navigator.onLine) {
     koneksiEl.textContent = "🟢 Online";
     koneksiEl.style.color = "#16a34a";
@@ -114,77 +106,62 @@ function updateKoneksi() {
     statusEl.style.color = "#dc2626";
 
     pesanEl.innerHTML = `
-      Perangkat kamu sedang offline.<br>
-      Pastikan internet aktif untuk melihat nilai.
+      Perangkat offline.<br>
+      Aktifkan internet untuk melihat hasil.
     `;
   }
 }
 
-// jalankan awal
 updateKoneksi();
-
-// listener perubahan koneksi
 window.addEventListener("online", updateKoneksi);
 window.addEventListener("offline", updateKoneksi);
 
-// ===============================
-// 🔄 LOADING AWAL
-// ===============================
+// ================= VALIDASI =================
+if (!siswaUid || !kodeUjian) {
+  location.href = "../login-siswa.html";
+}
+
+// ================= LOADING =================
 emojiEl.textContent = "⏳";
-statusEl.textContent = "Memverifikasi jawaban di server...";
+statusEl.textContent = "Memverifikasi jawaban...";
 statusEl.style.color = "#f59e0b";
 
-if (!siswaUid || !kodeUjian) {
-  window.location.href = "../login-siswa.html";
-}
+// ================= AMBIL DATA (ANTI STUCK) =================
+async function ambilData() {
+  try {
+    const ref = doc(db, "jawaban_siswa", `${siswaUid}_${kodeUjian}`);
 
-// ⛔ kalau offline, hentikan proses
-if (!navigator.onLine) {
-  throw new Error("Offline mode");
-}
+    let snap;
+    let retry = 0;
 
-// ⏳ delay
-await new Promise(r => setTimeout(r, 1000));
+    // 🔁 retry max 5x
+    while (retry < 5) {
+      snap = await getDoc(ref);
+      if (snap.exists()) break;
 
-try {
-  const ref = doc(db, "jawaban_siswa", `${siswaUid}_${kodeUjian}`);
-  const snap = await getDoc(ref);
+      await new Promise(r => setTimeout(r, 1000));
+      retry++;
+    }
 
-  if (snap.exists()) {
+    // ❌ masih tidak ada
+    if (!snap || !snap.exists()) {
+      emojiEl.textContent = "⚠️";
+      statusEl.textContent = "Data tidak ditemukan";
+      statusEl.style.color = "#dc2626";
+
+      pesanEl.innerHTML = `
+        Jawaban belum masuk ke server.<br>
+        Silakan hubungi guru.
+      `;
+      return;
+    }
+
     const data = snap.data();
-
-    console.log("DATA FIRESTORE:", data);
 
     statusEl.textContent = "✅ Jawaban tersimpan";
     statusEl.style.color = "#16a34a";
 
-    let skor = 0;
-    let totalSoal = 0;
-    let benar = 0;
-
-    const jawaban = data.detailJawaban || data.jawaban || null;
-
-    if (jawaban) {
-
-      if (Array.isArray(jawaban)) {
-        totalSoal = jawaban.length;
-        benar = jawaban.filter(j => j.benar === true).length;
-      }
-
-      else if (typeof jawaban === "object") {
-        const list = Object.values(jawaban);
-        totalSoal = list.length;
-        benar = list.filter(j => j.benar === true).length;
-      }
-
-      if (totalSoal > 0) {
-        skor = (benar / totalSoal) * 100;
-      }
-    }
-
-    if (skor === 0 && data.totalNilai != null) {
-      skor = Number(data.totalNilai);
-    }
+    let skor = Number(data.totalNilai || 0);
 
     if (isNaN(skor)) {
       emojiEl.textContent = "⚠️";
@@ -193,61 +170,41 @@ try {
     }
 
     // 🎯 EMOJI
-    if (skor < 50) {
-      emojiEl.textContent = "😢";
-    } else if (skor <= 75) {
-      emojiEl.textContent = "🙂";
-    } else {
-      emojiEl.textContent = "😄";
-    }
+    if (skor < 50) emojiEl.textContent = "😢";
+    else if (skor <= 75) emojiEl.textContent = "🙂";
+    else emojiEl.textContent = "😄";
 
     pesanEl.innerHTML = `
       Terima kasih telah mengikuti ujian.<br><br>
-      Jumlah soal: <b>${totalSoal}</b><br>
-      Jawaban benar: <b>${benar}</b><br>
-      Nilai kamu: <b>${Math.round(skor)}</b>
+      Nilai kamu: <b>${skor}</b>
     `;
 
-  } else {
-    emojiEl.textContent = "⚠️";
-    statusEl.textContent = "❌ Data tidak ditemukan";
+  } catch (err) {
+    console.error(err);
+
+    emojiEl.textContent = "❌";
+    statusEl.textContent = "Gagal mengambil data";
     statusEl.style.color = "#dc2626";
 
-    pesanEl.innerHTML = `
-      Jawaban tidak ditemukan.<br>
-      Hubungi guru / pengawas.
-    `;
+    pesanEl.textContent = "Terjadi kesalahan koneksi.";
   }
-
-} catch (err) {
-  console.error("ERROR:", err);
-
-  if (!navigator.onLine) return;
-
-  emojiEl.textContent = "❌";
-  statusEl.textContent = "Gagal mengambil data";
-  statusEl.style.color = "#dc2626";
-
-  pesanEl.innerHTML = "Terjadi kesalahan koneksi ke server.";
 }
-const btnLogin = document.querySelector("a.btn");
 
-btnLogin.addEventListener("click", async (e) => {
-  e.preventDefault(); // tahan dulu pindah halaman
+await new Promise(r => setTimeout(r, 800)); // delay halus
+ambilData();
+
+// ================= UPDATE STATUS =================
+document.querySelector("a.btn").addEventListener("click", async (e) => {
+  e.preventDefault();
 
   try {
-    if (siswaUid) {
-      await setDoc(doc(db, "peserta", siswaUid), {
-        status: "offline",
-        lastOnline: serverTimestamp()
-      }, { merge: true });
-    }
-  } catch (err) {
-    console.error("Gagal update status offline:", err);
-  }
+    await setDoc(doc(db, "peserta", siswaUid), {
+      status: "offline",
+      lastOnline: serverTimestamp()
+    }, { merge: true });
+  } catch {}
 
-  // setelah update baru pindah halaman
-  window.location.href = "../login-siswa.html";
+  location.href = "../login-siswa.html";
 });
 </script>
 
