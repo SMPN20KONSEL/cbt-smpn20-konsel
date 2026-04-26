@@ -167,46 +167,35 @@ button:active {
 }
 
 /* ================= RESPONSIVE ================= */
-
-/* HP */
-@media (max-width: 480px) {
-  .card {
-    max-width: 100%;
-  }
-
-  body::before {
-    display: none;
-  }
-}
-
-/* DESKTOP */
-@media (min-width: 900px) {
-  .wrapper {
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;
-    gap: 30px;
-  }
-}
-/* ================= MOBILE FULL SCREEN ================= */
 @media (max-width: 480px) {
 
   body {
-    align-items: stretch; /* biar isi memenuhi layar */
     padding: 0;
+    align-items: stretch;
   }
 
-  .login-box {
-    max-width: 100%;
-    width: 100%;
-    min-height: 100vh; /* 🔥 full tinggi layar */
-    border-radius: 0; /* hilangkan sudut biar full */
-    box-shadow: none;
-    padding: 30px 20px;
-
-    display: flex;
+  .wrapper {
     flex-direction: column;
-    justify-content: center; /* isi tetap di tengah */
+    gap: 0;
+    margin: 0;
+    width: 100%;
+  }
+
+  .card {
+    width: 100%;
+    min-height: auto;
+    border-radius: 0;
+    box-shadow: none;
+    padding: 24px 18px;
+  }
+
+  .input-card {
+    order: 1;
+  }
+
+  .rules-card {
+    order: 2;
+    background: #ffffff;
   }
 
   body::before {
