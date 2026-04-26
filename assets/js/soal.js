@@ -160,64 +160,50 @@ document.addEventListener("change", (e) => {
 
 // ================= HITUNG NILAI =================
 function hitungNilai() {
-  let skorDapat = 0;
-  let skorMax   = 0;
+  let totalSkor = 0;
+  let totalMaks = 0;
 
   semuaSoal.forEach(soal => {
 
-    // ===== PG =====
-    if (soal.tipe === "pg") {
-      const max = soal.skor || 2;
-      skorMax += max;
+    const max = 2; // semua soal 2 poin
+    totalMaks += max;
 
+    // ================= PG =================
+    if (soal.tipe === "pg") {
       if ((jawabanSiswa.pg[soal.id] || "") === soal.kunci) {
-        skorDapat += max;
+        totalSkor += 2;
       }
     }
 
-    // ===== MCMA =====
-if (soal.tipe === "mcma") {
-  const kunci = soal.kunci || [];
-  const jawaban = jawabanSiswa.mcma[soal.id] || [];
-  const semuaOpsi = Object.keys(soal.opsi || {});
+    // ================= MCMA =================
+    if (soal.tipe === "mcma") {
+      const kunci = soal.kunci || [];
+      const jawaban = jawabanSiswa.mcma[soal.id] || [];
 
-  const max = soal.skor || 2;
-  skorMax += max;
+      if (kunci.length === 0) return;
 
-  let benar = 0;
-  let salah = 0;
+      let benar = 0;
+      let salah = 0;
 
-  jawaban.forEach(j => {
-    if (kunci.includes(j)) {
-      benar++;
-    } else {
-      salah++;
+      jawaban.forEach(j => {
+        if (kunci.includes(j)) benar++;
+        else salah++;
+      });
+
+      const poinPerKunci = 2 / kunci.length;
+
+      let skor = (benar * poinPerKunci) - (salah * poinPerKunci);
+
+      if (skor < 0) skor = 0;
+      if (skor > 2) skor = 2;
+
+      totalSkor += skor;
     }
-  });
 
-  const jumlahKunci = kunci.length;
-  const jumlahSalahOpsi = semuaOpsi.length - jumlahKunci;
-
-  let skor = 0;
-
-  if (jumlahKunci > 0 && jumlahSalahOpsi > 0) {
-    skor =
-      (benar / jumlahKunci) -
-      (salah / jumlahSalahOpsi);
-  }
-
-  if (skor < 0) skor = 0;
-
-  skorDapat += skor * max;
-}
-
-    // ===== KATEGORI =====
+    // ================= KATEGORI =================
     if (soal.tipe === "kategori") {
       const pernyataan = soal.pernyataan || [];
       const jawaban = jawabanSiswa.kategori[soal.id] || [];
-
-      const max = soal.skor || 2;
-      skorMax += max;
 
       let benar = 0;
 
@@ -227,23 +213,19 @@ if (soal.tipe === "mcma") {
         }
       });
 
-      let skor = pernyataan.length > 0
-        ? (benar / pernyataan.length)
-        : 0;
+      const skor = (benar / pernyataan.length) * 2;
 
-      skorDapat += skor * max;
+      totalSkor += skor;
     }
 
   });
 
-  // 🔥 NORMALISASI KE 100
-  const nilaiPG =
-    skorMax === 0 ? 0 : (skorDapat / skorMax) * 100;
+  const nilai = (totalSkor / totalMaks) * 100;
 
   return {
-    nilaiPG: Number(nilaiPG.toFixed(2)),
+    nilaiPG: Number(nilai.toFixed(2)),
     nilaiEssay: 0,
-    totalNilai: Math.round(nilaiPG)
+    totalNilai: Math.round(nilai)
   };
 }
 
