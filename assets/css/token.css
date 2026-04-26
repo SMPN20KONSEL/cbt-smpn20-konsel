@@ -5,14 +5,24 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+/* ================= BODY (DESKTOP) ================= */
+body {
   min-height: 100vh;
   background: linear-gradient(135deg, #2c6aa3, #3b6fa1);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 16px;
+  position: relative;
 }
 
 /* ================= BACKGROUND ================= */
@@ -28,7 +38,6 @@ body::before {
   border-radius: 40px;
   z-index: 0;
 }
-
 
 /* ================= WRAPPER ================= */
 .wrapper {
@@ -165,7 +174,19 @@ button:active {
   font-size: 13px;
 }
 
-/* ================= RESPONSIVE ================= */
+/* ================= ANIMATION ================= */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ================= MOBILE FULLSCREEN FIX ================= */
 @media (max-width: 768px) {
 
   html, body {
@@ -177,22 +198,24 @@ button:active {
   }
 
   body {
-    display: block !important;
-    background: linear-gradient(135deg, #2c6aa3, #3b6fa1);
+    display: block !important; /* 🔥 MATIKAN FLEX */
+    padding: 0;
+  }
+
+  body::before {
+    display: none;
   }
 
   .wrapper {
+    all: unset; /* 🔥 reset wrapper total */
     width: 100%;
-    max-width: 100%;
-    margin: 0 !important;
-    padding: 0;
     display: block;
   }
 
   .card {
     width: 100%;
     max-width: 100% !important;
-    min-height: 100dvh; /* 🔥 lebih stabil dari 100vh */
+    min-height: 100dvh; /* 🔥 FULL LAYAR REAL HP */
     margin: 0;
     border-radius: 0;
     box-shadow: none;
@@ -208,20 +231,5 @@ button:active {
 
   .rules-card {
     min-height: 100dvh;
-  }
-
-  body::before {
-    display: none;
-  }
-}
-/* ================= ANIMATION ================= */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
   }
 }

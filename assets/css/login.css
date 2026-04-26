@@ -5,14 +5,24 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-body {
+html, body {
   margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* ================= BODY DESKTOP ================= */
+body {
   min-height: 100vh;
   background: linear-gradient(135deg, #2c6aa3, #3b6fa1);
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   padding: 16px;
+  position: relative;
 }
 
 /* ================= BACKGROUND ================= */
@@ -107,22 +117,11 @@ p {
   border-radius: 8px;
   border: 1px solid #e5e7eb;
   outline: none;
-  transition: 0.2s;
 }
 
 .input-group input:focus {
   border-color: #1e4f8c;
   box-shadow: 0 0 0 2px rgba(30, 79, 140, 0.1);
-}
-
-/* ================= TOGGLE PASSWORD ================= */
-.toggle-password {
-  position: absolute;
-  top: 50%;
-  right: 12px;
-  transform: translateY(-50%);
-  cursor: pointer;
-  font-size: 14px;
 }
 
 /* ================= BUTTON ================= */
@@ -137,7 +136,6 @@ button {
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 button:active {
@@ -162,45 +160,6 @@ button:hover {
   color: #9ca3af;
 }
 
-/* ================= MOBILE FULL SCREEN ================= */
-@media (max-width: 768px) {
-
-  html, body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow-x: hidden;
-  }
-
-  body {
-    display: block; /* matikan flex center */
-    padding: 0;
-  }
-
-  .wrapper {
-    width: 100%;
-    margin: 0;
-    display: block;
-  }
-
-  .login-box {
-    max-width: 100%;
-    width: 100%;
-    min-height: 100vh; /* 🔥 full tinggi layar */
-    border-radius: 0; /* hilangkan sudut biar full */
-    box-shadow: none;
-    padding: 30px 20px;
-
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* isi tetap di tengah */
-  }
-
-  body::before {
-    display: none;
-  }
-}
 /* ================= ANIMATION ================= */
 @keyframes fadeIn {
   from {
@@ -210,5 +169,47 @@ button:hover {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* ================= MOBILE FULL SCREEN CBT ================= */
+@media (max-width: 768px) {
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+  }
+
+  body {
+    display: block !important; /* 🔥 MATIKAN FLEX */
+    padding: 0;
+    background: linear-gradient(135deg, #2c6aa3, #3b6fa1);
+  }
+
+  body::before {
+    display: none;
+  }
+
+  /* ================= LOGIN FULL SCREEN ================= */
+  .login-box {
+    width: 100%;
+    max-width: 100% !important;
+
+    min-height: 100dvh; /* 🔥 FIX SAMSUNG A25 */
+    border-radius: 0;
+    box-shadow: none;
+
+    padding: 30px 20px;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  h2, p {
+    text-align: center;
   }
 }
