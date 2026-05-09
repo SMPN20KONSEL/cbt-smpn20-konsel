@@ -160,16 +160,23 @@ document.addEventListener("change", (e) => {
 
 // ================= HITUNG NILAI =================
 function hitungNilai() {
+
   let totalSkor = 0;
   let totalMaks = 0;
 
   semuaSoal.forEach(soal => {
 
-    const max = 2; // semua soal 2 poin
-    totalMaks += max;
+    if (
+      soal.tipe === "pg" ||
+      soal.tipe === "mcma" ||
+      soal.tipe === "kategori"
+    ) {
+      totalMaks += 2;
+    }
 
     // ================= PG =================
     if (soal.tipe === "pg") {
+
       if ((jawabanSiswa.pg[soal.id] || "") === soal.kunci) {
         totalSkor += 2;
       }
@@ -177,31 +184,39 @@ function hitungNilai() {
 
     // ================= MCMA =================
     if (soal.tipe === "mcma") {
+
       const kunci = soal.kunci || [];
       const jawaban = jawabanSiswa.mcma[soal.id] || [];
-
-      if (kunci.length === 0) return;
 
       let benar = 0;
       let salah = 0;
 
       jawaban.forEach(j => {
-        if (kunci.includes(j)) benar++;
-        else salah++;
+        if (kunci.includes(j)) {
+          benar++;
+        } else {
+          salah++;
+        }
       });
 
-      const poinPerKunci = 2 / kunci.length;
+      let skor = 0;
 
-      let skor = (benar * poinPerKunci) - (salah * poinPerKunci);
+      if (kunci.length > 0) {
 
-      if (skor < 0) skor = 0;
-      if (skor > 2) skor = 2;
+        const poinPerKunci = 2 / kunci.length;
+
+        skor = (benar * poinPerKunci) - (salah * poinPerKunci);
+
+        // minimal 0 maksimal 2
+        skor = Math.max(0, Math.min(2, skor));
+      }
 
       totalSkor += skor;
     }
 
     // ================= KATEGORI =================
     if (soal.tipe === "kategori") {
+
       const pernyataan = soal.pernyataan || [];
       const jawaban = jawabanSiswa.kategori[soal.id] || [];
 
@@ -213,14 +228,25 @@ function hitungNilai() {
         }
       });
 
-      const skor = (benar / pernyataan.length) * 2;
+      let skor = 0;
+
+      // hindari pembagian 0
+      if (pernyataan.length > 0) {
+        skor = (benar / pernyataan.length) * 2;
+      }
+
+      // batas nilai 0 - 2
+      skor = Math.max(0, Math.min(2, skor));
 
       totalSkor += skor;
     }
 
   });
 
-  const nilai = (totalSkor / totalMaks) * 100;
+  // ================= NILAI AKHIR =================
+  const nilai = totalMaks > 0
+    ? (totalSkor / totalMaks) * 100
+    : 0;
 
   return {
     nilaiPG: Number(nilai.toFixed(2)),
