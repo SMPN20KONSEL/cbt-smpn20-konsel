@@ -120,7 +120,19 @@ window.addEventListener("offline", updateKoneksi);
 if (!siswaUid || !kodeUjian) {
   location.href = "../login-siswa.html";
 }
+if (localStorage.getItem(`sudah_kirim_${siswaUid}_${kodeUjian}`) !== "true") {
 
+  emojiEl.textContent = "⚠️";
+  statusEl.textContent = "Ujian belum selesai";
+  statusEl.style.color = "#dc2626";
+
+  pesanEl.innerHTML = `
+    Data ujian belum lengkap.<br>
+    Silakan kembali ke halaman ujian.
+  `;
+
+  return;
+}
 // ================= LOADING =================
 emojiEl.textContent = "⏳";
 statusEl.textContent = "Memverifikasi jawaban...";
@@ -161,23 +173,44 @@ async function ambilData() {
     statusEl.textContent = "✅ Jawaban tersimpan";
     statusEl.style.color = "#16a34a";
 
-    let skor = Number(data.totalNilai || 0);
+let skorPG = Number(data.nilaiPG || 0);
 
-    if (isNaN(skor)) {
-      emojiEl.textContent = "⚠️";
-      pesanEl.innerHTML = "Nilai belum tersedia.";
-      return;
-    }
+// ✅ cek apakah ada jawaban essay
+const adaEssay =
+  Object.keys(data.jawabanEssay || {}).length > 0;
 
-    // 🎯 EMOJI
-    if (skor < 50) emojiEl.textContent = "😢";
-    else if (skor <= 75) emojiEl.textContent = "🙂";
-    else emojiEl.textContent = "😄";
+// ✅ jika ada essay & nilai PG masih 0
+if (
+  adaEssay &&
+  data.nilaiEssay === 0 &&
+  skorPG === 0
+) {
 
-    pesanEl.innerHTML = `
-      Terima kasih telah mengikuti ujian.<br><br>
-      Nilai kamu: <b>${skor}</b>
-    `;
+  emojiEl.textContent = "📝";
+
+  pesanEl.innerHTML = `
+    Terima kasih telah mengikuti ujian.<br><br>
+    Jawaban essay berhasil dikirim.<br>
+    Nilai essay akan diisi oleh guru.
+  `;
+
+} else {
+  // 🎯 EMOJI BERDASARKAN NILAI PG
+  if (skorPG < 50) {
+    emojiEl.textContent = "😢";
+  } else if (skorPG <= 75) {
+    emojiEl.textContent = "🙂";
+  } else {
+    emojiEl.textContent = "😄";
+  }
+
+  pesanEl.innerHTML = `
+  Terima kasih telah mengikuti ujian.<br><br>
+
+  Nilai PG Kamu: <b>${skorPG}</b><br>
+  Nilai essay akan diisi oleh guru.
+`;
+}
 
   } catch (err) {
     console.error(err);
@@ -190,8 +223,8 @@ async function ambilData() {
   }
 }
 
-await new Promise(r => setTimeout(r, 800)); // delay halus
-ambilData();
+await new Promise(r => setTimeout(r, 800));
+await ambilData();
 
 // ================= UPDATE STATUS =================
 document.querySelector("a.btn").addEventListener("click", async (e) => {
@@ -204,7 +237,8 @@ document.querySelector("a.btn").addEventListener("click", async (e) => {
     }, { merge: true });
   } catch {}
 
-  location.href = "../login-siswa.html";
+  sessionStorage.clear();
+ location.href = "../login-siswa.html";
 });
 </script>
 

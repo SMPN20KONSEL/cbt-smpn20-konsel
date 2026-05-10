@@ -68,11 +68,16 @@ async function tambahPelanggaran(pesan) {
     console.error("Gagal simpan pelanggaran:", err);
   }
 
-  if (pelanggaran >= 3) {
-    tampilkanToast("❌ Terlalu banyak pelanggaran! Ujian dikirim.");
-    simpanJawaban();
-    simpanJawabanFirestore();
-  }
+if (pelanggaran >= 3 && !sudahDikirim) {
+
+  sudahDikirim = true;
+
+  tampilkanToast("❌ Terlalu banyak pelanggaran! Ujian dikirim.");
+
+  simpanJawaban();
+
+  simpanJawabanFirestore();
+}
 }
 
 let jawabanSiswa = {
@@ -156,6 +161,23 @@ document.addEventListener("change", (e) => {
 
     jawabanSiswa.kategori[id][index] = (e.target.value === "true");
   }
+});
+
+// ================= AUTO SAVE ESSAY =================
+document.addEventListener("input", (e) => {
+
+  if (e.target.tagName === "TEXTAREA") {
+
+    const soalId = e.target.name.replace("soal_", "");
+
+    jawabanSiswa.essay[soalId] = e.target.value;
+
+    localStorage.setItem(
+      LS_JAWABAN_KEY,
+      JSON.stringify(jawabanSiswa)
+    );
+  }
+
 });
 
 // ================= HITUNG NILAI =================
@@ -616,7 +638,7 @@ const intervalTimer = setInterval(() => {
     `${m.toString().padStart(2, "0")}:${d.toString().padStart(2, "0")}`;
 
   // ⏰ WAKTU HABIS
-if (waktu <= 0) {
+if (waktu <= 0 && !sudahDikirim) {
   clearInterval(intervalTimer);
   localStorage.removeItem(LS_WAKTU_KEY);
 
@@ -672,17 +694,42 @@ async function lepasSesiUjian() {
 
 // ================= SIMPAN FIRESTORE =================
 async function simpanJawabanFirestore() {
-  if (sudahDikirim) return;
+if (!navigator.onLine) {
+
+  tampilkanToast(
+    "❌ Tidak ada koneksi internet!"
+  );
+
+  btnNext.disabled = false;
+  btnPrev.disabled = false;
+
+  sudahDikirim = false;
+  sudahSelesai = false;
+
+  return;
+}
+if (sudahDikirim) return;
 
   btnNext.disabled = true;
   btnPrev.disabled = true;
-simpanJawaban();
-  // ❗ CEGAH ERROR JIKA JADWAL BELUM ADA
-  if (!jadwal || !jadwal.guruId) {
-    console.error("❌ Jadwal belum siap!");
-    tampilkanToast("Terjadi kesalahan, coba lagi...");
-    return;
-  }
+
+  simpanJawaban();
+
+  // ❗ VALIDASI
+if (!jadwal || !jadwal.guruId) {
+
+  console.error("❌ Jadwal belum siap!");
+
+  tampilkanToast("Terjadi kesalahan, coba lagi...");
+
+  btnNext.disabled = false;
+  btnPrev.disabled = false;
+
+  sudahDikirim = false;
+  sudahSelesai = false;
+
+  return;
+}
 
   sudahDikirim = true;
   sudahSelesai = true;
@@ -691,13 +738,15 @@ simpanJawaban();
   const docId = `${siswaUid}_${kodeUjian}`;
 
   try {
+
+    // ================= SIMPAN JAWABAN =================
     await setDoc(doc(db, "jawaban_siswa", docId), {
+
       siswaUid,
       namaSiswa,
       kelas: kelasSiswa,
       mapel: mapelUjian,
 
-      // ✅ FIX AMAN
       guruId: jadwal.guruId || "",
       bankSoalId: jadwal.bankSoalId || "",
 
@@ -716,31 +765,49 @@ simpanJawaban();
 
       waktu_mulai: waktuMulai,
       waktu_selesai: serverTimestamp()
+
     });
 
-    // ✅ UPDATE STATUS SISWA
+    // ================= UPDATE PESERTA =================
     await setDoc(doc(db, "peserta", siswaUid), {
+
       status: "selesai",
       lastOnline: serverTimestamp()
+
     }, { merge: true });
 
     console.log("✅ Jawaban tersimpan");
 
-  } catch (err) {
-    console.error("❌ Firestore error:", err);
-  } finally {
+    // ✅ HAPUS STORAGE HANYA JIKA BERHASIL
     localStorage.setItem(LS_KIRIM_KEY, "true");
+
     localStorage.removeItem(LS_JAWABAN_KEY);
     localStorage.removeItem(LS_WAKTU_KEY);
     localStorage.removeItem(LS_SOAL_KEY);
+
     await lepasSesiUjian();
 
     setTimeout(() => {
       window.location.replace("selesai.html");
-    }, 1200); // kasih waktu Firestore commit
+    }, 1200);
+
+  } catch (err) {
+
+    console.error("❌ Firestore error:", err);
+
+    tampilkanToast(
+      "❌ Gagal mengirim jawaban. Periksa internet!"
+    );
+
+    // ✅ AKTIFKAN LAGI TOMBOL
+    btnNext.disabled = false;
+    btnPrev.disabled = false;
+
+    // ✅ RESET STATUS
+    sudahDikirim = false;
+    sudahSelesai = false;
   }
 }
-
 
 // Mencegah klik kanan, copy, dan print screen
 document.addEventListener("contextmenu", e => e.preventDefault());
@@ -784,6 +851,7 @@ confirmLogout.onclick = async () => {
 
   location.href = "../login-siswa.html";
 };
+
 // ================= SUBMIT MODAL =================
 cancelSubmit.onclick = () => {
   submitModal.classList.remove("show");
@@ -803,15 +871,12 @@ confirmSubmit.onclick = () => {
   simpanJawabanFirestore();
 };
 
-window.addEventListener("beforeunload", async (e) => {
+window.addEventListener("beforeunload", () => {
+
   if (!sudahSelesai) {
     simpanJawaban();
-
-    await setDoc(doc(db, "peserta", siswaUid), {
-      status: "keluar",
-      lastOnline: serverTimestamp()
-    }, { merge: true });
   }
+
 });
 
 document.addEventListener("visibilitychange", () => {
@@ -821,12 +886,24 @@ document.addEventListener("visibilitychange", () => {
 });
 
 document.addEventListener("fullscreenchange", () => {
+
   if (!document.fullscreenElement) {
+
     tambahPelanggaran("⚠️ Tidak boleh keluar dari fullscreen!");
-    
-    // 🔥 paksa masuk lagi
-    document.documentElement.requestFullscreen();
+
+    document.documentElement.requestFullscreen()
+      .catch(() => {});
+
   }
+
+});
+
+window.addEventListener("offline", () => {
+  tampilkanToast("⚠️ Internet terputus!");
+});
+
+window.addEventListener("online", () => {
+  tampilkanToast("✅ Internet tersambung kembali");
 });
 
 // ================= INIT =================

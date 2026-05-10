@@ -80,7 +80,12 @@ await setDoc(pesertaRef, {
   nama: siswa.nama,
   kelas: siswa.kelas,
   email,
+
   status: "login",
+
+  // reset token lama
+  kodeUjian: "",
+
   loginAt: serverTimestamp(),
   lastOnline: serverTimestamp()
 }, { merge: true });

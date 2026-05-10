@@ -1,7 +1,12 @@
 // assets/js/firebase.js
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-app.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+import {
+  initializeFirestore,
+  persistentLocalCache,
+  persistentSingleTabManager
+}
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 // Analytics OPTIONAL (boleh dihapus kalau tidak dipakai)
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.8.0/firebase-analytics.js";
 
@@ -20,7 +25,11 @@ export const app = initializeApp(firebaseConfig);
 
 // SERVICES
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  localCache: persistentLocalCache({
+    tabManager: persistentSingleTabManager()
+  })
+});
 
 // OPTIONAL
 export const analytics = getAnalytics(app);
