@@ -79,31 +79,69 @@ a.btn {
 
 <script type="module">
 import { db } from "../assets/js/firebase.js";
-import { doc, getDoc, setDoc, serverTimestamp } 
+
+import {
+  doc,
+  getDoc,
+  setDoc,
+  serverTimestamp
+}
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-const siswaUid  = sessionStorage.getItem("siswaUid");
-const kodeUjian = sessionStorage.getItem("kodeUjian");
+/* ===============================
+   SESSION
+================================ */
+const siswaUid =
+  sessionStorage.getItem("siswaUid");
 
-const emojiEl   = document.getElementById("emoji");
-const pesanEl   = document.getElementById("pesan");
-const statusEl  = document.getElementById("status");
-const koneksiEl = document.getElementById("koneksi");
+const kodeUjian =
+  sessionStorage.getItem("kodeUjian");
 
-// ================= KONEKSI =================
+/* ===============================
+   ELEMENT
+================================ */
+const emojiEl =
+  document.getElementById("emoji");
+
+const pesanEl =
+  document.getElementById("pesan");
+
+const statusEl =
+  document.getElementById("status");
+
+const koneksiEl =
+  document.getElementById("koneksi");
+
+/* ===============================
+   STATUS KONEKSI
+================================ */
 function updateKoneksi() {
+
   if (!koneksiEl) return;
 
   if (navigator.onLine) {
-    koneksiEl.textContent = "🟢 Online";
-    koneksiEl.style.color = "#16a34a";
+
+    koneksiEl.textContent =
+      "🟢 Online";
+
+    koneksiEl.style.color =
+      "#16a34a";
+
   } else {
-    koneksiEl.textContent = "🔴 Offline";
-    koneksiEl.style.color = "#dc2626";
+
+    koneksiEl.textContent =
+      "🔴 Offline";
+
+    koneksiEl.style.color =
+      "#dc2626";
 
     emojiEl.textContent = "📡";
-    statusEl.textContent = "Tidak ada koneksi internet";
-    statusEl.style.color = "#dc2626";
+
+    statusEl.textContent =
+      "Tidak ada koneksi internet";
+
+    statusEl.style.color =
+      "#dc2626";
 
     pesanEl.innerHTML = `
       Perangkat offline.<br>
@@ -113,133 +151,277 @@ function updateKoneksi() {
 }
 
 updateKoneksi();
-window.addEventListener("online", updateKoneksi);
-window.addEventListener("offline", updateKoneksi);
 
-// ================= VALIDASI =================
+window.addEventListener(
+  "online",
+  updateKoneksi
+);
+
+window.addEventListener(
+  "offline",
+  updateKoneksi
+);
+
+/* ===============================
+   VALIDASI SESSION
+================================ */
 if (!siswaUid || !kodeUjian) {
-  location.href = "../login-siswa.html";
+
+  location.href =
+    "../login-siswa.html";
+
+  throw new Error(
+    "SESSION_TIDAK_ADA"
+  );
 }
-if (localStorage.getItem(`sudah_kirim_${siswaUid}_${kodeUjian}`) !== "true") {
+
+/* ===============================
+   VALIDASI SUDAH KIRIM
+================================ */
+if (
+  localStorage.getItem(
+    `sudah_kirim_${siswaUid}_${kodeUjian}`
+  ) !== "true"
+) {
 
   emojiEl.textContent = "⚠️";
-  statusEl.textContent = "Ujian belum selesai";
-  statusEl.style.color = "#dc2626";
+
+  statusEl.textContent =
+    "Ujian belum selesai";
+
+  statusEl.style.color =
+    "#dc2626";
 
   pesanEl.innerHTML = `
     Data ujian belum lengkap.<br>
     Silakan kembali ke halaman ujian.
   `;
 
-  return;
+  throw new Error(
+    "UJIAN_BELUM_SELESAI"
+  );
 }
-// ================= LOADING =================
-emojiEl.textContent = "⏳";
-statusEl.textContent = "Memverifikasi jawaban...";
-statusEl.style.color = "#f59e0b";
 
-// ================= AMBIL DATA (ANTI STUCK) =================
+/* ===============================
+   CEK INTERNET
+================================ */
+if (!navigator.onLine) {
+
+  throw new Error(
+    "OFFLINE"
+  );
+}
+
+/* ===============================
+   LOADING
+================================ */
+emojiEl.textContent = "⏳";
+
+statusEl.textContent =
+  "Memverifikasi jawaban...";
+
+statusEl.style.color =
+  "#f59e0b";
+
+/* ===============================
+   AMBIL DATA
+================================ */
 async function ambilData() {
+
   try {
-    const ref = doc(db, "jawaban_siswa", `${siswaUid}_${kodeUjian}`);
+
+    const ref = doc(
+      db,
+      "jawaban_siswa",
+      `${siswaUid}_${kodeUjian}`
+    );
 
     let snap;
+
     let retry = 0;
 
-    // 🔁 retry max 5x
+    /* RETRY MAX 5x */
     while (retry < 5) {
-      snap = await getDoc(ref);
-      if (snap.exists()) break;
 
-      await new Promise(r => setTimeout(r, 1000));
+      snap = await getDoc(ref);
+
+      if (snap.exists()) {
+        break;
+      }
+
+      await new Promise(
+        r => setTimeout(r, 1000)
+      );
+
       retry++;
     }
 
-    // ❌ masih tidak ada
-    if (!snap || !snap.exists()) {
+    /* DATA BELUM ADA */
+    if (
+      !snap ||
+      !snap.exists()
+    ) {
+
       emojiEl.textContent = "⚠️";
-      statusEl.textContent = "Data tidak ditemukan";
-      statusEl.style.color = "#dc2626";
+
+      statusEl.textContent =
+        "Data tidak ditemukan";
+
+      statusEl.style.color =
+        "#dc2626";
 
       pesanEl.innerHTML = `
         Jawaban belum masuk ke server.<br>
         Silakan hubungi guru.
       `;
+
       return;
     }
 
     const data = snap.data();
 
-    statusEl.textContent = "✅ Jawaban tersimpan";
-    statusEl.style.color = "#16a34a";
+    /* DATA KOSONG */
+    if (!data) {
 
-let skorPG = Number(data.nilaiPG || 0);
+      throw new Error(
+        "DATA_KOSONG"
+      );
+    }
 
-// ✅ cek apakah ada jawaban essay
-const adaEssay =
-  Object.keys(data.jawabanEssay || {}).length > 0;
+    /* STATUS */
+    statusEl.textContent =
+      "✅ Jawaban tersimpan";
 
-// ✅ jika ada essay & nilai PG masih 0
-if (
-  adaEssay &&
-  data.nilaiEssay === 0 &&
-  skorPG === 0
-) {
+    statusEl.style.color =
+      "#16a34a";
 
-  emojiEl.textContent = "📝";
+    /* NILAI PG */
+    const skorPG =
+      Number(data.nilaiPG || 0);
 
-  pesanEl.innerHTML = `
-    Terima kasih telah mengikuti ujian.<br><br>
-    Jawaban essay berhasil dikirim.<br>
-    Nilai essay akan diisi oleh guru.
-  `;
+    /* ADA ESSAY */
+    const adaEssay =
+      Object.keys(
+        data.jawabanEssay || {}
+      ).length > 0;
 
-} else {
-  // 🎯 EMOJI BERDASARKAN NILAI PG
-  if (skorPG < 50) {
-    emojiEl.textContent = "😢";
-  } else if (skorPG <= 75) {
-    emojiEl.textContent = "🙂";
-  } else {
-    emojiEl.textContent = "😄";
-  }
+    /* ===============================
+       ESSAY BELUM DINILAI
+    ================================ */
+    if (
+      adaEssay &&
+      !data.nilaiEssay &&
+      skorPG === 0
+    ) {
 
-  pesanEl.innerHTML = `
-  Terima kasih telah mengikuti ujian.<br><br>
+      emojiEl.textContent = "📝";
 
-  Nilai PG Kamu: <b>${skorPG}</b><br>
-  Nilai essay akan diisi oleh guru.
-`;
-}
+      pesanEl.innerHTML = `
+        Terima kasih telah mengikuti ujian.
+        <br><br>
+
+        Jawaban essay berhasil dikirim.
+        <br>
+
+        Nilai essay akan diisi oleh guru.
+      `;
+
+    } else {
+
+      /* EMOJI BERDASARKAN NILAI */
+      if (skorPG < 50) {
+
+        emojiEl.textContent = "😢";
+
+      } else if (skorPG <= 75) {
+
+        emojiEl.textContent = "🙂";
+
+      } else {
+
+        emojiEl.textContent = "😄";
+      }
+
+      pesanEl.innerHTML = `
+        Terima kasih telah mengikuti ujian.
+        <br><br>
+
+        Nilai PG Kamu:
+        <b>${skorPG}</b>
+
+        <br>
+
+        Nilai essay akan diisi oleh guru.
+      `;
+    }
 
   } catch (err) {
+
     console.error(err);
 
     emojiEl.textContent = "❌";
-    statusEl.textContent = "Gagal mengambil data";
-    statusEl.style.color = "#dc2626";
 
-    pesanEl.textContent = "Terjadi kesalahan koneksi.";
+    statusEl.textContent =
+      "Gagal mengambil data";
+
+    statusEl.style.color =
+      "#dc2626";
+
+    pesanEl.textContent =
+      "Terjadi kesalahan koneksi.";
   }
 }
 
-await new Promise(r => setTimeout(r, 800));
+/* ===============================
+   JALANKAN
+================================ */
+await new Promise(
+  r => setTimeout(r, 800)
+);
+
 await ambilData();
 
-// ================= UPDATE STATUS =================
-document.querySelector("a.btn").addEventListener("click", async (e) => {
-  e.preventDefault();
+/* ===============================
+   KEMBALI LOGIN
+================================ */
+document.querySelector("a.btn")
+?.addEventListener(
+  "click",
+  async (e) => {
 
-  try {
-    await setDoc(doc(db, "peserta", siswaUid), {
-      status: "offline",
-      lastOnline: serverTimestamp()
-    }, { merge: true });
-  } catch {}
+    e.preventDefault();
 
-  sessionStorage.clear();
- location.href = "../login-siswa.html";
-});
+    try {
+
+      await setDoc(
+        doc(
+          db,
+          "peserta",
+          siswaUid
+        ),
+        {
+          status: "offline",
+
+          lastOnline:
+            serverTimestamp()
+        },
+        { merge: true }
+      );
+
+    } catch (err) {
+
+      console.log(err);
+
+    }
+
+    /* HAPUS SESSION */
+    sessionStorage.clear();
+
+    /* PINDAH */
+    location.href =
+      "../login-siswa.html";
+  }
+);
 </script>
 
 </body>
