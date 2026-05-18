@@ -24,12 +24,14 @@ const kodeUjian =
 const uid =
   sessionStorage.getItem("siswaUid");
 
+// ================= VALIDASI =================
 if (!nis || !kodeUjian || !uid) {
 
   alert("Sesi ujian tidak valid");
 
   location.href = "token.html";
 
+  throw new Error("SESSION_INVALID");
 }
 
 // ================= ELEMENT =================
@@ -51,7 +53,7 @@ const elMapel =
 const btnMulai =
   document.getElementById("btn-mulai");
 
-// ================= ISI DATA =================
+// ================= TAMPILKAN DATA =================
 elNis.textContent = nis;
 elNama1.textContent = nama;
 elNama2.textContent = nama;
@@ -62,37 +64,36 @@ async function loadMapel() {
 
   try {
 
-    const ujianRef =
-      doc(
-        db,
-        "jadwal_ujian",
-        kodeUjian
-      );
+    const snap = await getDoc(
+      doc(db, "jadwal_ujian", kodeUjian)
+    );
 
-    const ujianSnap =
-      await getDoc(ujianRef);
-
-    if (!ujianSnap.exists()) {
+    if (!snap.exists()) {
 
       elMapel.textContent = "-";
       return;
 
     }
 
-    const ujian =
-      ujianSnap.data();
+    const data = snap.data();
 
     elMapel.textContent =
-      ujian.mapel || "-";
+      data.mapel || "-";
 
+    // simpan session
     sessionStorage.setItem(
       "mapelUjian",
-      ujian.mapel || "-"
+      data.mapel || "-"
     );
 
-  } catch (e) {
+    sessionStorage.setItem(
+      "durasiUjian",
+      data.durasi || 60
+    );
 
-    console.error(e);
+  } catch (err) {
+
+    console.error(err);
 
     elMapel.textContent = "-";
 
@@ -103,29 +104,57 @@ async function loadMapel() {
 loadMapel();
 
 // ================= MULAI UJIAN =================
-btnMulai.onclick = async () => {
+btnMulai.addEventListener(
+  "click",
+  async () => {
 
-  masukFullscreen();
+    try {
 
-  await setDoc(
-    doc(db, "peserta", uid),
-    {
-      status: "mengerjakan",
-      kodeUjian: kodeUjian
-    },
-    { merge: true }
-  );
+      btnMulai.disabled = true;
 
-  sessionStorage.setItem(
-    "waktuMulai",
-    Date.now()
-  );
+      btnMulai.innerText =
+        "Memulai...";
 
-  setTimeout(() => {
+      // update peserta
+      await setDoc(
+        doc(db, "peserta", uid),
+        {
+          status: "mengerjakan",
+          kodeUjian,
 
-    location.href =
-      "soal.html";
+          namaSiswa: nama,
+          kelas,
 
-  }, 500);
+          waktuMulai:
+            Date.now()
+        },
+        { merge: true }
+      );
 
-};
+      // simpan waktu mulai
+      sessionStorage.setItem(
+        "waktuMulai",
+        Date.now()
+      );
+
+      // pindah halaman
+      location.href =
+        "soal.html";
+
+    } catch (err) {
+
+      console.error(err);
+
+      alert(
+        "Gagal memulai ujian"
+      );
+
+      btnMulai.disabled = false;
+
+      btnMulai.innerText =
+        "Mulai Ujian";
+
+    }
+
+  }
+);
