@@ -2,61 +2,95 @@
 <html lang="id">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <title>Ujian Selesai</title>
 
-<link rel="stylesheet" href="../assets/css/admin.css">
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-
 <style>
-body {
-  font-family: Arial, sans-serif;
-  background-color: #f5f5f5;
+*{
   margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  min-height:100vh;
+
   display:flex;
-  justify-content:center;
   align-items:center;
-  height:100vh;
+  justify-content:center;
+
+  padding:20px;
+
+  background:#f4f6f9;
+
+  font-family:Arial,sans-serif;
 }
 
-.card {
+.card{
+  width:100%;
+  max-width:420px;
+
+  padding:35px 25px;
+
   background:#fff;
-  padding:30px 40px;
-  border-radius:10px;
-  box-shadow:0 3px 10px rgba(0,0,0,0.1);
+  border-radius:14px;
+
   text-align:center;
-  max-width:500px;
+
+  box-shadow:0 3px 12px rgba(0,0,0,.08);
 }
 
-h1 { color:#3b82f6; }
-
-.emoji {
-  font-size:5rem;
+.icon{
+  font-size:70px;
   margin-bottom:15px;
-  display:block;
-  animation: bounce 1s infinite;
 }
 
-.status {
-  font-size:14px;
-  margin-bottom:8px;
+h1{
+  font-size:28px;
+  color:#2563eb;
+  margin-bottom:10px;
 }
 
-a.btn {
+p{
+  font-size:15px;
+  color:#374151;
+  line-height:1.6;
+  margin-bottom:25px;
+}
+
+.btn{
   display:inline-block;
-  background:#3b82f6;
+
+  padding:12px 24px;
+
+  background:#2563eb;
   color:#fff;
-  padding:12px 25px;
-  border-radius:6px;
+
+  border-radius:8px;
+
   text-decoration:none;
   font-weight:bold;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.btn:hover{
+  opacity:.9;
+}
+
+@media(max-width:600px){
+
+  .card{
+    padding:28px 20px;
+  }
+
+  h1{
+    font-size:24px;
+  }
+
+  .icon{
+    font-size:60px;
+  }
+
 }
 </style>
 </head>
@@ -64,364 +98,77 @@ a.btn {
 <body>
 
 <div class="card">
-  <span class="emoji" id="emoji">⏳</span>
+
+  <div class="icon">
+    ✅
+  </div>
+
   <h1>Ujian Selesai</h1>
 
-  <div id="status" class="status">Memuat...</div>
-  <div id="koneksi" class="status"></div>
+  <p>
+    Jawaban berhasil tersimpan di Firebase.
+    <br>
+    Terima kasih telah mengikuti ujian.
+  </p>
 
-  <p id="pesan">Memproses data...</p>
-
-  <a href="../login-siswa.html" class="btn">
-    <i class="fa fa-sign-in"></i> Kembali ke Login
+  <a
+    href="../login-siswa.html"
+    class="btn"
+    id="btnLogin"
+  >
+    Kembali ke Login
   </a>
+
 </div>
 
 <script type="module">
+
 import { db } from "../assets/js/firebase.js";
 
 import {
   doc,
-  getDoc,
   setDoc,
   serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-/* ===============================
-   SESSION
-================================ */
 const siswaUid =
   sessionStorage.getItem("siswaUid");
 
-const kodeUjian =
-  sessionStorage.getItem("kodeUjian");
+document
+.getElementById("btnLogin")
+.addEventListener("click", async (e) => {
 
-/* ===============================
-   ELEMENT
-================================ */
-const emojiEl =
-  document.getElementById("emoji");
+  e.preventDefault();
 
-const pesanEl =
-  document.getElementById("pesan");
+  try{
 
-const statusEl =
-  document.getElementById("status");
+    if(siswaUid){
 
-const koneksiEl =
-  document.getElementById("koneksi");
+      await setDoc(
+        doc(db,"peserta",siswaUid),
+        {
+          status:"offline",
+          lastOnline:serverTimestamp()
+        },
+        { merge:true }
+      );
 
-/* ===============================
-   STATUS KONEKSI
-================================ */
-function updateKoneksi() {
+    }
 
-  if (!koneksiEl) return;
+  }catch(err){
 
-  if (navigator.onLine) {
+    console.log(err);
 
-    koneksiEl.textContent =
-      "🟢 Online";
-
-    koneksiEl.style.color =
-      "#16a34a";
-
-  } else {
-
-    koneksiEl.textContent =
-      "🔴 Offline";
-
-    koneksiEl.style.color =
-      "#dc2626";
-
-    emojiEl.textContent = "📡";
-
-    statusEl.textContent =
-      "Tidak ada koneksi internet";
-
-    statusEl.style.color =
-      "#dc2626";
-
-    pesanEl.innerHTML = `
-      Perangkat offline.<br>
-      Aktifkan internet untuk melihat hasil.
-    `;
   }
-}
 
-updateKoneksi();
-
-window.addEventListener(
-  "online",
-  updateKoneksi
-);
-
-window.addEventListener(
-  "offline",
-  updateKoneksi
-);
-
-/* ===============================
-   VALIDASI SESSION
-================================ */
-if (!siswaUid || !kodeUjian) {
+  sessionStorage.clear();
 
   location.href =
     "../login-siswa.html";
 
-  throw new Error(
-    "SESSION_TIDAK_ADA"
-  );
-}
+});
 
-/* ===============================
-   VALIDASI SUDAH KIRIM
-================================ */
-if (
-  localStorage.getItem(
-    `sudah_kirim_${siswaUid}_${kodeUjian}`
-  ) !== "true"
-) {
-
-  emojiEl.textContent = "⚠️";
-
-  statusEl.textContent =
-    "Ujian belum selesai";
-
-  statusEl.style.color =
-    "#dc2626";
-
-  pesanEl.innerHTML = `
-    Data ujian belum lengkap.<br>
-    Silakan kembali ke halaman ujian.
-  `;
-
-  throw new Error(
-    "UJIAN_BELUM_SELESAI"
-  );
-}
-
-/* ===============================
-   CEK INTERNET
-================================ */
-if (!navigator.onLine) {
-
-  throw new Error(
-    "OFFLINE"
-  );
-}
-
-/* ===============================
-   LOADING
-================================ */
-emojiEl.textContent = "⏳";
-
-statusEl.textContent =
-  "Memverifikasi jawaban...";
-
-statusEl.style.color =
-  "#f59e0b";
-
-/* ===============================
-   AMBIL DATA
-================================ */
-async function ambilData() {
-
-  try {
-
-    const ref = doc(
-      db,
-      "jawaban_siswa",
-      `${siswaUid}_${kodeUjian}`
-    );
-
-    let snap;
-
-    let retry = 0;
-
-    /* RETRY MAX 5x */
-    while (retry < 5) {
-
-      snap = await getDoc(ref);
-
-      if (snap.exists()) {
-        break;
-      }
-
-      await new Promise(
-        r => setTimeout(r, 1000)
-      );
-
-      retry++;
-    }
-
-    /* DATA BELUM ADA */
-    if (
-      !snap ||
-      !snap.exists()
-    ) {
-
-      emojiEl.textContent = "⚠️";
-
-      statusEl.textContent =
-        "Data tidak ditemukan";
-
-      statusEl.style.color =
-        "#dc2626";
-
-      pesanEl.innerHTML = `
-        Jawaban belum masuk ke server.<br>
-        Silakan hubungi guru.
-      `;
-
-      return;
-    }
-
-    const data = snap.data();
-
-    /* DATA KOSONG */
-    if (!data) {
-
-      throw new Error(
-        "DATA_KOSONG"
-      );
-    }
-
-    /* STATUS */
-    statusEl.textContent =
-      "✅ Jawaban tersimpan";
-
-    statusEl.style.color =
-      "#16a34a";
-
-    /* NILAI PG */
-    const skorPG =
-      Number(data.nilaiPG || 0);
-
-    /* ADA ESSAY */
-    const adaEssay =
-      Object.keys(
-        data.jawabanEssay || {}
-      ).length > 0;
-
-    /* ===============================
-       ESSAY BELUM DINILAI
-    ================================ */
-    if (
-      adaEssay &&
-      !data.nilaiEssay &&
-      skorPG === 0
-    ) {
-
-      emojiEl.textContent = "📝";
-
-      pesanEl.innerHTML = `
-        Terima kasih telah mengikuti ujian.
-        <br><br>
-
-        Jawaban essay berhasil dikirim.
-        <br>
-
-        Nilai essay akan diisi oleh guru.
-      `;
-
-    } else {
-
-      /* EMOJI BERDASARKAN NILAI */
-      if (skorPG < 50) {
-
-        emojiEl.textContent = "😢";
-
-      } else if (skorPG <= 75) {
-
-        emojiEl.textContent = "🙂";
-
-      } else {
-
-        emojiEl.textContent = "😄";
-      }
-
-      pesanEl.innerHTML = `
-        Terima kasih telah mengikuti ujian.
-        <br><br>
-
-        Nilai PG Kamu:
-        <b>${skorPG}</b>
-
-        <br>
-
-        Nilai essay akan diisi oleh guru.
-      `;
-    }
-
-  } catch (err) {
-
-    console.error(err);
-
-    emojiEl.textContent = "❌";
-
-    statusEl.textContent =
-      "Gagal mengambil data";
-
-    statusEl.style.color =
-      "#dc2626";
-
-    pesanEl.textContent =
-      "Terjadi kesalahan koneksi.";
-  }
-}
-
-/* ===============================
-   JALANKAN
-================================ */
-await new Promise(
-  r => setTimeout(r, 800)
-);
-
-await ambilData();
-
-/* ===============================
-   KEMBALI LOGIN
-================================ */
-document.querySelector("a.btn")
-?.addEventListener(
-  "click",
-  async (e) => {
-
-    e.preventDefault();
-
-    try {
-
-      await setDoc(
-        doc(
-          db,
-          "peserta",
-          siswaUid
-        ),
-        {
-          status: "offline",
-
-          lastOnline:
-            serverTimestamp()
-        },
-        { merge: true }
-      );
-
-    } catch (err) {
-
-      console.log(err);
-
-    }
-
-    /* HAPUS SESSION */
-    sessionStorage.clear();
-
-    /* PINDAH */
-    location.href =
-      "../login-siswa.html";
-  }
-);
 </script>
 
 </body>

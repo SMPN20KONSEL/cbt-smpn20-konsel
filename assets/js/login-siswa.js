@@ -88,7 +88,9 @@ async function login() {
 
   clearError();
 
+  // ===============================
   // VALIDASI INPUT
+  // ===============================
   if (!email || !password) {
 
     showError(
@@ -213,6 +215,7 @@ async function login() {
 
     /* ===============================
        TRACKING LOGIN PESERTA
+       (VERSI HEMAT KUOTA)
     ================================ */
     const pesertaRef =
       doc(db, "peserta", uid);
@@ -237,51 +240,9 @@ async function login() {
         kodeUjian: "",
 
         loginAt:
-          serverTimestamp(),
-
-        lastOnline:
           serverTimestamp()
       },
       { merge: true }
-    );
-
-    /* ===============================
-       UPDATE ONLINE TIAP 30 DETIK
-    ================================ */
-    const interval =
-      setInterval(async () => {
-
-        try {
-
-          await setDoc(
-            pesertaRef,
-            {
-              lastOnline:
-                serverTimestamp()
-            },
-            { merge: true }
-          );
-
-        } catch (e) {
-
-          console.log(
-            "Update online gagal:",
-            e
-          );
-        }
-
-      }, 30000);
-
-    /* ===============================
-       STOP INTERVAL SAAT KELUAR
-    ================================ */
-    window.addEventListener(
-      "beforeunload",
-      () => {
-
-        clearInterval(interval);
-
-      }
     );
 
     /* ===============================
@@ -297,7 +258,9 @@ async function login() {
     let pesan =
       "Login gagal.";
 
-    // ERROR FIREBASE AUTH
+    /* ===============================
+       ERROR FIREBASE AUTH
+    ================================ */
     switch (err.code) {
 
       case "auth/invalid-credential":
