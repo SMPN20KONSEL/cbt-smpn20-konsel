@@ -143,18 +143,19 @@ btnMulai.addEventListener(
 
     } catch (err) {
 
-      console.error(err);
+  console.error("ERROR FIRESTORE:", err);
 
-      alert(
-        "Gagal memulai ujian"
-      );
+  alert(
+    "Gagal memulai ujian : " +
+    err.message
+  );
 
-      btnMulai.disabled = false;
+  btnMulai.disabled = false;
 
-      btnMulai.innerText =
-        "Mulai Ujian";
+  btnMulai.innerText =
+    "Mulai Ujian";
 
-    }
+}
 
   }
 );
