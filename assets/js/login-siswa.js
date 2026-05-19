@@ -106,27 +106,26 @@ async function login() {
         "Akun nonaktif"
       );
     }
+/* SESSION */
+sessionStorage.setItem(
+  "siswaUid",
+  uid
+);
 
-    /* SESSION */
-    sessionStorage.setItem(
-      "uid",
-      uid
-    );
+sessionStorage.setItem(
+  "nisSiswa",
+  akun.nis || ""
+);
 
-    sessionStorage.setItem(
-      "nis",
-      akun.nis || ""
-    );
+sessionStorage.setItem(
+  "namaSiswa",
+  akun.nama || ""
+);
 
-    sessionStorage.setItem(
-      "nama",
-      akun.nama || ""
-    );
-
-    sessionStorage.setItem(
-      "kelas",
-      akun.kelas || ""
-    );
+sessionStorage.setItem(
+  "kelasSiswa",
+  akun.kelas || ""
+);
 
     /* TRACK LOGIN */
     setDoc(
