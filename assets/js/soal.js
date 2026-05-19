@@ -55,7 +55,7 @@ let jadwal = {};
 
 let mapelUjian = "";
 let judulUjian = "";
-
+let isSubmitting = false;
 let sudahDikirim = false;
 let sudahSelesai = false;
 
@@ -70,8 +70,6 @@ let jawabanSiswa = {
   kategori: {},
   essay: {}
 };
-
-// ================= STORAGE =================
 const LS_JAWABAN =
   `jawaban_${siswaUid}_${kodeUjian}`;
 
@@ -83,14 +81,22 @@ const LS_SOAL =
 
 const LS_KIRIM =
   `kirim_${siswaUid}_${kodeUjian}`;
-  if (
-  localStorage.getItem(LS_KIRIM)
-  === "true"
-) {
 
-  location.href =
-    "selesai.html";
+// ================= FINAL GUARD =================
+const sudahKirim = localStorage.getItem(LS_KIRIM);
 
+if (sudahKirim === "true") {
+
+  sudahDikirim = true;
+  sudahSelesai = true;
+  isSubmitting = true;
+
+  // STOP semua proses lain
+  setTimeout(() => {
+    location.replace("selesai.html");
+  }, 30);
+
+  throw new Error("UJIAN SUDAH SELESAI");
 }
 // ================= TOAST =================
 function toast(msg) {
@@ -861,27 +867,23 @@ const timer = setInterval(() => {
   );
 
   // ================= HABIS =================
-  if (
-    waktu <= 0 &&
-    !sudahDikirim
-  ) {
+if (waktu <= 0) {
 
-    clearInterval(timer);
+  clearInterval(timer);
 
-    waktu = 0;
+  waktu = 0;
+  timerEl.textContent = "00:00";
 
-    timerEl.textContent =
-      "00:00";
+  if (!sudahDikirim) {
 
-    toast(
-      "Waktu habis, jawaban dikirim"
-    );
+    toast("Waktu habis, jawaban dikirim");
 
     simpanJawaban();
-
     simpanJawabanFirestore();
 
-    return;
+  }
+
+  return;
 
   }
 
@@ -892,8 +894,9 @@ const timer = setInterval(() => {
 // ================= SIMPAN FINAL =================
 async function simpanJawabanFirestore() {
 
-  if (sudahDikirim) return;
+  if (sudahDikirim || isSubmitting) return;
 
+  isSubmitting = true;
   sudahDikirim = true;
   sudahSelesai = true;
 
@@ -1164,18 +1167,13 @@ document.addEventListener(
 );
 
 // ================= BEFORE UNLOAD =================
-window.addEventListener(
-  "beforeunload",
-  () => {
+window.addEventListener("beforeunload", (e) => {
 
-    if (!sudahSelesai) {
-
-      simpanJawaban();
-
-    }
-
+  if (!sudahSelesai && !isSubmitting) {
+    simpanJawaban(); // ONLY LOCAL SAVE
   }
-);
+
+});
 
 // ================= INIT =================
 loadSoal();
