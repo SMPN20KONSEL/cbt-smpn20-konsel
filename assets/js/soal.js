@@ -39,7 +39,7 @@ const durasiUjian = Number(
   sessionStorage.getItem("durasiUjian") || 30
 );
 
-if (!siswaUid || !kodeUjian || !waktuMulai) {
+if (!siswaUid || !kodeUjian || !namaSiswa || !waktuMulai) {
   alert("Sesi ujian tidak valid");
   location.href = "login-siswa.html";
 }
@@ -83,20 +83,20 @@ const LS_KIRIM =
   `kirim_${siswaUid}_${kodeUjian}`;
 
 // ================= FINAL GUARD =================
-const sudahKirim = localStorage.getItem(LS_KIRIM);
+const sudahKirim =
+  localStorage.getItem(LS_KIRIM);
 
 if (sudahKirim === "true") {
 
-  sudahDikirim = true;
-  sudahSelesai = true;
-  isSubmitting = true;
+  console.log(
+    "UJIAN SUDAH SELESAI"
+  );
 
-  // STOP semua proses lain
-  setTimeout(() => {
-    location.replace("selesai.html");
-  }, 30);
+  location.replace(
+    "selesai.html"
+  );
 
-  throw new Error("UJIAN SUDAH SELESAI");
+  return;
 }
 // ================= TOAST =================
 function toast(msg) {
@@ -840,17 +840,23 @@ btnPrev.onclick = () => {
 
 };
 
-// ================= TIMER =================
-// ================= TIMER =================
-let waktu =
-  Number(
-    localStorage.getItem(
-      LS_WAKTU
-    )
-  ) ||
-  durasiUjian * 60;
 
-const timer = setInterval(() => {
+// ================= TIMER =================
+let waktuCache =
+  localStorage.getItem(LS_WAKTU);
+
+let waktu =
+  waktuCache !== null
+    ? Number(waktuCache)
+    : durasiUjian * 60;
+
+if (isNaN(waktu)) {
+
+  waktu = durasiUjian * 60;
+
+}
+
+let timer = setInterval(() => {
 
   const menit =
     Math.floor(waktu / 60);
@@ -893,12 +899,13 @@ if (waktu <= 0) {
 
 // ================= SIMPAN FINAL =================
 async function simpanJawabanFirestore() {
-
+  
   if (sudahDikirim || isSubmitting) return;
 
   isSubmitting = true;
   sudahDikirim = true;
   sudahSelesai = true;
+  clearInterval(timer);
 
   btnNext.disabled = true;
   btnPrev.disabled = true;
@@ -996,11 +1003,10 @@ async function simpanJawabanFirestore() {
       "Jawaban berhasil dikirim"
     );
 
-    setTimeout(() => {
-
-      location.href =
-        "selesai.html";
-
+   setTimeout(() => {
+    location.replace(
+    "selesai.html"
+    );
     }, 1500);
 
   } catch (err) {
@@ -1098,26 +1104,26 @@ await setDoc(
   { merge: true }
 );
 
-  if (
-    pelanggaran >= 3 &&
-    !sudahDikirim
-  ) {
+if (
+  pelanggaran >= 3 &&
+  !sudahDikirim
+) {
 
-    toast(
-      "Terlalu banyak pelanggaran"
-    );
+  toast(
+    "Pelanggaran terlalu banyak"
+  );
 
-    simpanJawaban();
-    simpanJawabanFirestore();
-
-  }
+}
 
 }
 
 // ================= ONLINE STATUS =================
 setInterval(async () => {
 
-  if (sudahSelesai) return;
+  if (
+    sudahSelesai ||
+    !navigator.onLine
+  ) return;
 
   try {
 
@@ -1149,17 +1155,51 @@ document.addEventListener(
   "copy",
   (e) => e.preventDefault()
 );
+// ================= OFFLINE =================
+window.addEventListener(
+  "offline",
+  () => {
 
+    toast(
+      "Koneksi internet terputus"
+    );
+
+  }
+);
+
+window.addEventListener(
+  "online",
+  () => {
+
+    toast(
+      "Koneksi internet tersambung"
+    );
+
+  }
+);
 // ================= TAB CHANGE =================
+let hiddenTimer;
+
 document.addEventListener(
   "visibilitychange",
   () => {
 
-    if (document.hidden) {
+    if (
+      document.hidden &&
+      navigator.onLine
+    ) {
 
-      tambahPelanggaran(
-        "Tidak boleh pindah tab"
-      );
+      hiddenTimer = setTimeout(() => {
+
+        tambahPelanggaran(
+          "Jangan keluar dari halaman ujian"
+        );
+
+      }, 5000);
+
+    } else {
+
+      clearTimeout(hiddenTimer);
 
     }
 

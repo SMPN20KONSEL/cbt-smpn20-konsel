@@ -1,4 +1,5 @@
-import { db, auth } from "./firebase.js";
+import { db, auth }
+from "./firebase.js";
 
 import {
   doc,
@@ -13,141 +14,191 @@ import {
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 /* =============================
-   AUTH CHECK
+   GLOBAL USER
 ============================= */
-onAuthStateChanged(auth, (user) => {
+let currentUser = null;
 
-  if (!user) {
-
-    location.href = "login.html";
-    return;
-
-  }
-
-  sessionStorage.setItem(
-    "siswaUid",
-    user.uid
+/* =============================
+   ELEMENT
+============================= */
+const tokenInput =
+  document.getElementById(
+    "token"
   );
 
-});
+const errorDiv =
+  document.getElementById(
+    "error"
+  );
+
+const btnMasuk =
+  document.getElementById(
+    "btnMasuk"
+  );
+
+/* =============================
+   AUTH CHECK
+============================= */
+onAuthStateChanged(
+  auth,
+  (user) => {
+
+    if (!user) {
+
+      location.href =
+        "login.html";
+
+      return;
+    }
+
+    currentUser = user;
+
+    sessionStorage.setItem(
+      "siswaUid",
+      user.uid
+    );
+
+  }
+);
 
 /* =============================
    VERIFY TOKEN
 ============================= */
 async function verifyToken() {
 
-  const tokenInput =
-    document
-      .getElementById("token")
-      .value
-      .trim();
-
-  const errorDiv =
-    document.getElementById("error");
-
-  errorDiv.textContent = "";
-
-  // =============================
-  // VALIDASI KOSONG
-  // =============================
-  if (!tokenInput) {
+  if (!navigator.onLine) {
 
     errorDiv.textContent =
-      "Token tidak boleh kosong!";
+      "Koneksi internet terputus";
 
     return;
 
   }
 
+  // lanjut cek token...
+
+  /* BUTTON TIDAK ADA */
+  if (!btnMasuk) return;
+
+  /* CEGAH DOUBLE CLICK */
+  if (btnMasuk.disabled)
+    return;
+
+  /* CLEAR ERROR */
+  errorDiv.textContent = "";
+
+  /* VALIDASI LOGIN */
+  if (!currentUser) {
+
+    errorDiv.textContent =
+      "Sesi belum siap.";
+
+    return;
+  }
+
+  /* AMBIL TOKEN */
+  const token =
+    tokenInput.value
+      .trim()
+      .toUpperCase();
+
+  /* VALIDASI TOKEN */
+  if (!token) {
+
+    errorDiv.textContent =
+      "Token wajib diisi.";
+
+    return;
+  }
+
   try {
 
-    // =============================
-    // CEK TOKEN UJIAN
-    // =============================
-    const ref =
-      doc(
-        db,
-        "jadwal_ujian",
-        tokenInput
+    /* LOADING */
+    btnMasuk.disabled =
+      true;
+
+    btnMasuk.innerHTML =
+      "⏳ Memeriksa...";
+
+    /* CEK TOKEN */
+    const snap =
+      await getDoc(
+        doc(
+          db,
+          "jadwal_ujian",
+          token
+        )
       );
 
-    const snap =
-      await getDoc(ref);
-
-    // =============================
-    // TOKEN TIDAK ADA
-    // =============================
+    /* TOKEN TIDAK ADA */
     if (!snap.exists()) {
 
       errorDiv.textContent =
-        "Kode ujian tidak ditemukan!";
+        "Token tidak ditemukan.";
 
       return;
-
     }
 
-    const ujian = snap.data();
+    const ujian =
+      snap.data();
 
-    // =============================
-    // UJIAN TIDAK AKTIF
-    // =============================
-    if (!ujian.aktif) {
+    /* CEK STATUS UJIAN */
+    if (
+      ujian.aktif !== true
+    ) {
 
       errorDiv.textContent =
-        "Ujian belum aktif atau sudah selesai!";
+        "Ujian belum aktif.";
 
       return;
-
     }
 
-    // =============================
-    // SIMPAN STATUS PESERTA
-    // =============================
-    const uid =
-      sessionStorage.getItem(
-        "siswaUid"
-      );
-
-    await setDoc(
-      doc(db, "peserta", uid),
+    /* SIMPAN PESERTA
+       NON BLOCKING
+    */
+    setDoc(
+      doc(
+        db,
+        "peserta",
+        currentUser.uid
+      ),
       {
-        kodeUjian: tokenInput,
-        status: "belum_mulai"
+        kodeUjian:
+          token,
+
+        status:
+          "belum_mulai"
       },
       { merge: true }
-    );
+    ).catch(console.error);
 
-    // =============================
-    // SESSION STORAGE
-    // =============================
+    /* SESSION */
     sessionStorage.setItem(
       "kodeUjian",
-      tokenInput
+      token
     );
 
     sessionStorage.setItem(
       "bankSoalId",
-      ujian.bankSoalId
+      ujian.bankSoalId || ""
     );
 
     sessionStorage.setItem(
       "durasiUjian",
-      ujian.durasi
+      ujian.durasi || 0
     );
 
     sessionStorage.setItem(
       "mapelUjian",
-      ujian.mapel
+      ujian.mapel || ""
     );
 
     sessionStorage.setItem(
       "judulUjian",
-      ujian.judul
+      ujian.judul || ""
     );
 
-    // =============================
-    // MASUK HALAMAN UJIAN
-    // =============================
+    /* MASUK UJIAN */
     location.href =
       "ujian.html";
 
@@ -156,10 +207,38 @@ async function verifyToken() {
     console.error(err);
 
     errorDiv.textContent =
-      "Terjadi kesalahan sistem";
+      "Koneksi bermasalah.";
+
+  } finally {
+
+    btnMasuk.disabled =
+      false;
+
+    btnMasuk.innerHTML =
+      "Mulai Ujian";
 
   }
 
 }
 
-window.verifyToken = verifyToken;
+/* =============================
+   BUTTON
+============================= */
+window.verifyToken =
+  verifyToken;
+
+/* =============================
+   ENTER TOKEN
+============================= */
+tokenInput?.addEventListener(
+  "keydown",
+  (e) => {
+
+    if (e.key === "Enter") {
+
+      verifyToken();
+
+    }
+
+  }
+);

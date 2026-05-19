@@ -1,112 +1,68 @@
-/* ===============================
-   IMPORT FIREBASE
-================================ */
-import { auth, db } from "./firebase.js";
+import { auth, db }
+from "./firebase.js";
 
 import {
   signInWithEmailAndPassword,
   signOut
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
+}
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 
 import {
   doc,
   getDoc,
   setDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
-
-/* ===============================
-   ELEMENT
-================================ */
-const emailInput    = document.getElementById("email");
-const passwordInput = document.getElementById("password");
-const errorDiv      = document.getElementById("error");
-const btnLogin      = document.getElementById("btnLogin");
-
-/* ===============================
-   AUTO ISI EMAIL DARI QR
-================================ */
-const params = new URLSearchParams(window.location.search);
-
-const nis  = params.get("nis")?.trim();
-
-const nama = params
-  .get("nama")
-  ?.trim()
-  .toLowerCase()
-  .replace(/\s+/g, "");
-
-if (nis && nama) {
-
-  emailInput.value =
-    `${nama}${nis}@smp.belajar.id`;
-
-  passwordInput.focus();
 }
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
-/* ===============================
-   SHOW ERROR
-================================ */
-function showError(text) {
+const emailInput =
+  document.getElementById("email");
 
-  errorDiv.textContent = text;
+const passwordInput =
+  document.getElementById("password");
 
-  errorDiv.style.display = "block";
-}
+const errorDiv =
+  document.getElementById("error");
 
-/* ===============================
-   CLEAR ERROR
-================================ */
-function clearError() {
+const btnLogin =
+  document.getElementById("btnLogin");
 
-  errorDiv.textContent = "";
-
-  errorDiv.style.display = "none";
-}
-
-/* ===============================
-   LOADING BUTTON
-================================ */
-function setLoading(state) {
-
-  if (!btnLogin) return;
-
-  btnLogin.disabled = state;
-
-  btnLogin.innerHTML = state
-    ? "⏳ Masuk..."
-    : "Masuk";
-}
-
-/* ===============================
-   LOGIN SISWA
-================================ */
+/* LOGIN */
 async function login() {
 
-  const email    = emailInput.value.trim();
-  const password = passwordInput.value.trim();
-
-  clearError();
-
-  // ===============================
-  // VALIDASI INPUT
-  // ===============================
-  if (!email || !password) {
+  if (!navigator.onLine) {
 
     showError(
-      "Email dan password harus diisi!"
+      "Koneksi internet terputus"
     );
+
+    return;
+
+  }
+
+  // lanjut login...
+
+  const email =
+    emailInput.value.trim();
+
+  const password =
+    passwordInput.value.trim();
+
+  if (!email || !password) {
+
+    errorDiv.innerHTML =
+      "Isi email dan password";
 
     return;
   }
 
-  setLoading(true);
+  btnLogin.disabled = true;
+  btnLogin.innerHTML =
+    "⏳ Masuk...";
 
   try {
 
-    /* ===============================
-       LOGIN FIREBASE AUTH
-    ================================ */
+    /* LOGIN AUTH */
     const cred =
       await signInWithEmailAndPassword(
         auth,
@@ -114,140 +70,84 @@ async function login() {
         password
       );
 
-    const uid = cred.user.uid;
+    const uid =
+      cred.user.uid;
 
-    /* ===============================
-       VALIDASI akun_siswa
-    ================================ */
-    const akunRef =
-      doc(db, "akun_siswa", uid);
-
+    /* CEK akun_siswa */
     const akunSnap =
-      await getDoc(akunRef);
+      await getDoc(
+        doc(
+          db,
+          "akun_siswa",
+          uid
+        )
+      );
 
-    // akun tidak ada
     if (!akunSnap.exists()) {
 
       await signOut(auth);
 
-      showError(
-        "Akun siswa tidak ditemukan."
+      throw new Error(
+        "Akun tidak ditemukan"
       );
-
-      return;
     }
 
-    const akun = akunSnap.data();
+    const akun =
+      akunSnap.data();
 
-    // akun nonaktif
-    if (akun.aktif !== true) {
-
-      await signOut(auth);
-
-      showError(
-        "Akun dinonaktifkan."
-      );
-
-      return;
-    }
-
-    // role salah
+    /* CEK STATUS */
     if (
-      akun.role &&
-      akun.role !== "siswa"
+      akun.aktif !== true
     ) {
 
       await signOut(auth);
 
-      showError(
-        "Akses ditolak."
+      throw new Error(
+        "Akun nonaktif"
       );
-
-      return;
     }
 
-    const nisDB = akun.nis;
-
-    /* ===============================
-       VALIDASI DATA SISWA
-    ================================ */
-    const siswaRef =
-      doc(db, "siswa", nisDB);
-
-    const siswaSnap =
-      await getDoc(siswaRef);
-
-    if (!siswaSnap.exists()) {
-
-      await signOut(auth);
-
-      showError(
-        "Data siswa tidak ditemukan."
-      );
-
-      return;
-    }
-
-    const siswa = siswaSnap.data();
-
-    /* ===============================
-       SIMPAN SESSION
-    ================================ */
+    /* SESSION */
     sessionStorage.setItem(
-      "siswaUid",
+      "uid",
       uid
     );
 
     sessionStorage.setItem(
-      "nisSiswa",
-      nisDB
+      "nis",
+      akun.nis || ""
     );
 
     sessionStorage.setItem(
-      "namaSiswa",
-      siswa.nama || ""
+      "nama",
+      akun.nama || ""
     );
 
     sessionStorage.setItem(
-      "kelasSiswa",
-      siswa.kelas || ""
+      "kelas",
+      akun.kelas || ""
     );
 
-    /* ===============================
-       TRACKING LOGIN PESERTA
-       (VERSI HEMAT KUOTA)
-    ================================ */
-    const pesertaRef =
-      doc(db, "peserta", uid);
-
-    await setDoc(
-      pesertaRef,
+    /* TRACK LOGIN */
+    setDoc(
+      doc(
+        db,
+        "peserta",
+        uid
+      ),
       {
         uid,
-        nis: nisDB,
-
-        nama:
-          siswa.nama || "",
-
-        kelas:
-          siswa.kelas || "",
-
-        email,
-
+        nis: akun.nis,
+        nama: akun.nama,
+        kelas: akun.kelas,
         status: "login",
-
-        // reset token lama
-        kodeUjian: "",
-
         loginAt:
           serverTimestamp()
       },
       { merge: true }
     );
 
-    /* ===============================
-       LOGIN BERHASIL
-    ================================ */
+    /* MASUK */
     location.href =
       "./siswa/token.html";
 
@@ -255,94 +155,32 @@ async function login() {
 
     console.error(err);
 
-    let pesan =
-      "Login gagal.";
-
-    /* ===============================
-       ERROR FIREBASE AUTH
-    ================================ */
-    switch (err.code) {
-
-      case "auth/invalid-credential":
-        pesan =
-          "Email atau password salah.";
-        break;
-
-      case "auth/user-not-found":
-        pesan =
-          "Akun tidak ditemukan.";
-        break;
-
-      case "auth/wrong-password":
-        pesan =
-          "Password salah.";
-        break;
-
-      case "auth/too-many-requests":
-        pesan =
-          "Terlalu banyak percobaan login.";
-        break;
-
-      case "auth/network-request-failed":
-        pesan =
-          "Koneksi internet bermasalah.";
-        break;
-    }
-
-    showError(pesan);
+    errorDiv.innerHTML =
+      "Login gagal";
 
   } finally {
 
-    setLoading(false);
+    btnLogin.disabled =
+      false;
 
+    btnLogin.innerHTML =
+      "Masuk";
   }
 }
 
-/* ===============================
-   BUTTON LOGIN
-================================ */
-btnLogin?.addEventListener(
-  "click",
-  login
-);
+/* BUTTON */
+btnLogin.onclick = login;
 
-/* ===============================
-   ENTER = LOGIN
-================================ */
-passwordInput?.addEventListener(
+/* ENTER */
+passwordInput.addEventListener(
   "keydown",
-  (e) => {
+  e => {
 
     if (e.key === "Enter") {
+
       login();
+
     }
 
-  }
-);
-
-/* ===============================
-   TOGGLE PASSWORD
-================================ */
-const toggleBtn =
-  document.getElementById(
-    "togglePassword"
-  );
-
-toggleBtn?.addEventListener(
-  "click",
-  () => {
-
-    const show =
-      passwordInput.type === "password";
-
-    passwordInput.type =
-      show
-        ? "text"
-        : "password";
-
-    toggleBtn.textContent =
-      show
-        ? "🙈"
-        : "👁";
   }
 );
