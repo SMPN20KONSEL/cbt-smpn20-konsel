@@ -1077,7 +1077,7 @@ async function tambahPelanggaran(pesan) {
   const now = Date.now();
 
   if (
-    now - lastPelanggaranTime < 3000
+    now - lastPelanggaranTime < 30000
   ) return;
 
   lastPelanggaranTime = now;
@@ -1137,7 +1137,7 @@ setInterval(async () => {
 
   }
 
-}, 120000);
+}, 600000);
 
 // ================= BLOK AKSI =================
 document.addEventListener(
