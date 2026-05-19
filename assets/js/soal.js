@@ -508,43 +508,43 @@ function tampilkanSoal() {
           soal.id
         ]?.[i];
 
-      html += `
-        <tr>
+html += `
+  <tr data-kat="${soal.id}">
 
-          <td>
-            ${DOMPurify.sanitize(
-              p.teks || ""
-            )}
-          </td>
+    <td>
+      ${DOMPurify.sanitize(
+        p.teks || ""
+      )}
+    </td>
 
-          <td>
-            <input
-              type="radio"
-              name="kat_${soal.id}_${i}"
-              value="true"
-              ${
-                jawab === true
-                  ? "checked"
-                  : ""
-              }
-            >
-          </td>
+    <td>
+      <input
+        type="radio"
+        name="kat_${soal.id}_${i}"
+        value="true"
+        ${
+          jawab === true
+            ? "checked"
+            : ""
+        }
+      >
+    </td>
 
-          <td>
-            <input
-              type="radio"
-              name="kat_${soal.id}_${i}"
-              value="false"
-              ${
-                jawab === false
-                  ? "checked"
-                  : ""
-              }
-            >
-          </td>
+    <td>
+      <input
+        type="radio"
+        name="kat_${soal.id}_${i}"
+        value="false"
+        ${
+          jawab === false
+            ? "checked"
+            : ""
+        }
+      >
+    </td>
 
-        </tr>
-      `;
+  </tr>
+`;
 
     });
 
