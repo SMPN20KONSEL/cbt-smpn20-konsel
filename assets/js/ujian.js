@@ -36,9 +36,12 @@ const uid =
     "siswaUid"
   );
 
-// ================= VALIDASI =================
+/* ================= VALIDASI ================= */
+
 if (
   !nis ||
+  !nama ||
+  !kelas ||
   !kodeUjian ||
   !uid
 ) {
@@ -47,8 +50,9 @@ if (
     "Sesi ujian tidak valid"
   );
 
-  location.href =
-    "token.html";
+  location.replace(
+    "token.html"
+  );
 
   throw new Error(
     "SESSION_INVALID"
@@ -56,19 +60,31 @@ if (
 
 }
 
-// ================= SUDAH MULAI =================
-if (
+/* ================= SUDAH MULAI ================= */
+
+const statusUjian =
+  sessionStorage.getItem(
+    "statusUjian"
+  );
+
+const waktuMulai =
   sessionStorage.getItem(
     "waktuMulai"
-  )
+  );
+
+if (
+  statusUjian === "aktif" &&
+  waktuMulai
 ) {
 
-  location.href =
-    "soal.html";
+  location.replace(
+    "soal.html"
+  );
 
 }
 
-// ================= ELEMENT =================
+/* ================= ELEMENT ================= */
+
 const elNis =
   document.getElementById(
     "c-nisn"
@@ -99,7 +115,8 @@ const btnMulai =
     "btn-mulai"
   );
 
-// ================= TAMPILKAN DATA =================
+/* ================= TAMPILKAN DATA ================= */
+
 if (elNis)
   elNis.textContent =
     nis;
@@ -116,7 +133,8 @@ if (elKelas)
   elKelas.textContent =
     kelas;
 
-// ================= LOAD MAPEL =================
+/* ================= LOAD MAPEL ================= */
+
 async function loadMapel() {
 
   try {
@@ -132,20 +150,23 @@ async function loadMapel() {
 
     if (!snap.exists()) {
 
-      if (elMapel) {
+      alert(
+        "Jadwal ujian tidak ditemukan"
+      );
 
-        elMapel.textContent =
-          "-";
-
-      }
+      location.replace(
+        "token.html"
+      );
 
       return;
+
     }
 
     const data =
       snap.data();
 
-    /* CEK STATUS UJIAN */
+    /* ================= CEK STATUS ================= */
+
     if (
       data.aktif !== true
     ) {
@@ -154,13 +175,34 @@ async function loadMapel() {
         "Ujian belum aktif"
       );
 
-      location.href =
-        "token.html";
+      location.replace(
+        "token.html"
+      );
 
       return;
+
     }
 
-    /* TAMPIL MAPEL */
+    /* ================= CEK BANK SOAL ================= */
+
+    if (
+      !data.bankSoalId
+    ) {
+
+      alert(
+        "Bank soal belum tersedia"
+      );
+
+      location.replace(
+        "token.html"
+      );
+
+      return;
+
+    }
+
+    /* ================= TAMPIL MAPEL ================= */
+
     if (elMapel) {
 
       elMapel.textContent =
@@ -168,7 +210,8 @@ async function loadMapel() {
 
     }
 
-    /* SESSION */
+    /* ================= SESSION ================= */
+
     sessionStorage.setItem(
       "mapelUjian",
       data.mapel || ""
@@ -188,12 +231,9 @@ async function loadMapel() {
 
     console.error(err);
 
-    if (elMapel) {
-
-      elMapel.textContent =
-        "-";
-
-    }
+    alert(
+      "Gagal memuat data ujian"
+    );
 
   }
 
@@ -201,14 +241,22 @@ async function loadMapel() {
 
 loadMapel();
 
-// ================= LOCK =================
+/* ================= LOCK ================= */
+
 let isStarting =
   false;
 
-// ================= MULAI UJIAN =================
-btnMulai?.addEventListener(
+/* ================= MULAI UJIAN ================= */
+
+if (btnMulai) {
+
+btnMulai.addEventListener(
   "click",
   async (e) => {
+
+    e.preventDefault();
+
+    /* ================= OFFLINE ================= */
 
     if (!navigator.onLine) {
 
@@ -220,9 +268,8 @@ btnMulai?.addEventListener(
 
     }
 
-    e.preventDefault();
+    /* ================= DOUBLE CLICK ================= */
 
-    /* CEGAH DOUBLE CLICK */
     if (
       isStarting ||
       btnMulai.disabled
@@ -232,17 +279,17 @@ btnMulai?.addEventListener(
 
     try {
 
-      /* LOADING */
+      /* ================= LOADING ================= */
+
       btnMulai.disabled =
         true;
 
       btnMulai.innerHTML =
         "⏳ Memulai...";
 
-      /* SIMPAN PESERTA
-         NON BLOCKING
-      */
-      setDoc(
+      /* ================= SIMPAN PESERTA ================= */
+
+      await setDoc(
         doc(
           db,
           "peserta",
@@ -261,42 +308,49 @@ btnMulai?.addEventListener(
             kelas || "",
 
           waktuMulai:
+            serverTimestamp(),
+
+          lastOnline:
             serverTimestamp()
         },
         { merge: true }
-      ).catch(console.error);
+      );
 
-/* SESSION */
-sessionStorage.setItem(
-  "waktuMulai",
-  Date.now()
-);
+      /* ================= SESSION ================= */
 
-sessionStorage.setItem(
-  "statusUjian",
-  "aktif"
-);
+      sessionStorage.setItem(
+        "waktuMulai",
+        Date.now()
+      );
 
-/* RESET CACHE UJIAN */
-localStorage.removeItem(
-  `kirim_${uid}_${kodeUjian}`
-);
+      sessionStorage.setItem(
+        "statusUjian",
+        "aktif"
+      );
 
-localStorage.removeItem(
-  `waktu_${uid}_${kodeUjian}`
-);
+      /* ================= RESET CACHE ================= */
 
-localStorage.removeItem(
-  `soal_${uid}_${kodeUjian}`
-);
+      localStorage.removeItem(
+        `kirim_${uid}_${kodeUjian}`
+      );
 
-localStorage.removeItem(
-  `jawaban_${uid}_${kodeUjian}`
-);
+      localStorage.removeItem(
+        `waktu_${uid}_${kodeUjian}`
+      );
 
-/* MASUK SOAL */
-location.href =
-  "soal.html";
+      localStorage.removeItem(
+        `soal_${uid}_${kodeUjian}`
+      );
+
+      localStorage.removeItem(
+        `jawaban_${uid}_${kodeUjian}`
+      );
+
+      /* ================= MASUK SOAL ================= */
+
+      location.replace(
+        "soal.html"
+      );
 
     } catch (err) {
 
@@ -319,6 +373,21 @@ location.href =
         "Mulai Ujian";
 
     }
+
+  }
+);
+
+}
+
+/* ================= OFFLINE ================= */
+
+window.addEventListener(
+  "offline",
+  () => {
+
+    alert(
+      "Koneksi internet terputus"
+    );
 
   }
 );

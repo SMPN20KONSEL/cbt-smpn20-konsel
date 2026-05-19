@@ -15,6 +15,8 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
+/* ================= ELEMENT ================= */
+
 const emailInput =
   document.getElementById("email");
 
@@ -27,8 +29,21 @@ const errorDiv =
 const btnLogin =
   document.getElementById("btnLogin");
 
-/* LOGIN */
+/* ================= ERROR ================= */
+
+function showError(msg) {
+
+  if (!errorDiv) return;
+
+  errorDiv.innerHTML = msg;
+
+}
+
+/* ================= LOGIN ================= */
+
 async function login() {
+
+  /* ================= OFFLINE ================= */
 
   if (!navigator.onLine) {
 
@@ -40,29 +55,42 @@ async function login() {
 
   }
 
-  // lanjut login...
+  /* ================= VALIDASI ================= */
 
   const email =
-    emailInput.value.trim();
+    emailInput?.value
+    .trim();
 
   const password =
-    passwordInput.value.trim();
+    passwordInput?.value
+    .trim();
 
   if (!email || !password) {
 
-    errorDiv.innerHTML =
-      "Isi email dan password";
+    showError(
+      "Isi email dan password"
+    );
 
     return;
+
   }
 
+  /* ================= DOUBLE CLICK ================= */
+
+  if (btnLogin.disabled)
+    return;
+
   btnLogin.disabled = true;
+
   btnLogin.innerHTML =
     "⏳ Masuk...";
 
+  showError("");
+
   try {
 
-    /* LOGIN AUTH */
+    /* ================= LOGIN AUTH ================= */
+
     const cred =
       await signInWithEmailAndPassword(
         auth,
@@ -73,7 +101,8 @@ async function login() {
     const uid =
       cred.user.uid;
 
-    /* CEK akun_siswa */
+    /* ================= CEK AKUN ================= */
+
     const akunSnap =
       await getDoc(
         doc(
@@ -90,12 +119,14 @@ async function login() {
       throw new Error(
         "Akun tidak ditemukan"
       );
+
     }
 
     const akun =
       akunSnap.data();
 
-    /* CEK STATUS */
+    /* ================= CEK STATUS ================= */
+
     if (
       akun.aktif !== true
     ) {
@@ -105,30 +136,60 @@ async function login() {
       throw new Error(
         "Akun nonaktif"
       );
+
     }
-/* SESSION */
-sessionStorage.setItem(
-  "siswaUid",
-  uid
-);
 
-sessionStorage.setItem(
-  "nisSiswa",
-  akun.nis || ""
-);
+    /* ================= SESSION SISWA ================= */
 
-sessionStorage.setItem(
-  "namaSiswa",
-  akun.nama || ""
-);
+    sessionStorage.setItem(
+      "siswaUid",
+      uid
+    );
 
-sessionStorage.setItem(
-  "kelasSiswa",
-  akun.kelas || ""
-);
+    sessionStorage.setItem(
+      "nisSiswa",
+      akun.nis || ""
+    );
 
-    /* TRACK LOGIN */
-    setDoc(
+    sessionStorage.setItem(
+      "namaSiswa",
+      akun.nama || ""
+    );
+
+    sessionStorage.setItem(
+      "kelasSiswa",
+      akun.kelas || ""
+    );
+
+    /* ================= RESET SESSION UJIAN ================= */
+
+    sessionStorage.removeItem(
+      "kodeUjian"
+    );
+
+    sessionStorage.removeItem(
+      "bankSoalId"
+    );
+
+    sessionStorage.removeItem(
+      "durasiUjian"
+    );
+
+    sessionStorage.removeItem(
+      "mapelUjian"
+    );
+
+    sessionStorage.removeItem(
+      "judulUjian"
+    );
+
+    sessionStorage.removeItem(
+      "waktuMulai"
+    );
+
+    /* ================= TRACK LOGIN ================= */
+
+    await setDoc(
       doc(
         db,
         "peserta",
@@ -136,26 +197,71 @@ sessionStorage.setItem(
       ),
       {
         uid,
-        nis: akun.nis,
-        nama: akun.nama,
-        kelas: akun.kelas,
-        status: "login",
+        nis:
+          akun.nis || "",
+
+        nama:
+          akun.nama || "",
+
+        kelas:
+          akun.kelas || "",
+
+        status:
+          "login",
+
         loginAt:
+          serverTimestamp(),
+
+        lastOnline:
           serverTimestamp()
       },
       { merge: true }
     );
 
-    /* MASUK */
-    location.href =
-      "./siswa/token.html";
+    /* ================= MASUK ================= */
+
+    location.replace(
+      "./siswa/token.html"
+    );
 
   } catch (err) {
 
     console.error(err);
 
-    errorDiv.innerHTML =
+    let pesan =
       "Login gagal";
+
+    if (
+      err.code ===
+      "auth/invalid-credential"
+    ) {
+
+      pesan =
+        "Email atau password salah";
+
+    }
+
+    if (
+      err.message ===
+      "Akun nonaktif"
+    ) {
+
+      pesan =
+        "Akun nonaktif";
+
+    }
+
+    if (
+      err.message ===
+      "Akun tidak ditemukan"
+    ) {
+
+      pesan =
+        "Data siswa tidak ditemukan";
+
+    }
+
+    showError(pesan);
 
   } finally {
 
@@ -164,22 +270,39 @@ sessionStorage.setItem(
 
     btnLogin.innerHTML =
       "Masuk";
+
   }
+
 }
 
-/* BUTTON */
+/* ================= BUTTON ================= */
+
 btnLogin.onclick = login;
 
-/* ENTER */
-passwordInput.addEventListener(
+/* ================= ENTER ================= */
+
+passwordInput?.addEventListener(
   "keydown",
-  e => {
+  (e) => {
 
     if (e.key === "Enter") {
 
       login();
 
     }
+
+  }
+);
+
+/* ================= ONLINE STATUS ================= */
+
+window.addEventListener(
+  "offline",
+  () => {
+
+    showError(
+      "Koneksi internet terputus"
+    );
 
   }
 );

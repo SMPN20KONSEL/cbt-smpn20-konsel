@@ -1,50 +1,152 @@
 // ================= IMPORT FIREBASE =================
-import { db } from "./firebase.js";
+import { db }
+from "./firebase.js";
 
 import {
   doc,
   getDoc,
   setDoc,
-  updateDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
+}
+from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
 // ================= ELEMENT =================
-const soalContainer = document.getElementById("soal-container");
-const noSoalEl = document.getElementById("no-soal");
-const timerEl = document.getElementById("timer");
+const soalContainer =
+  document.getElementById(
+    "soal-container"
+  );
 
-const btnPrev = document.getElementById("prev");
-const btnNext = document.getElementById("next");
+const noSoalEl =
+  document.getElementById(
+    "no-soal"
+  );
 
-const toastEl = document.getElementById("toast");
+const timerEl =
+  document.getElementById(
+    "timer"
+  );
 
-const btnLogout = document.getElementById("btnLogout");
+const btnPrev =
+  document.getElementById(
+    "prev"
+  );
 
-const modal = document.getElementById("logoutModal");
-const cancelLogout = document.getElementById("cancelLogout");
-const confirmLogout = document.getElementById("confirmLogout");
+const btnNext =
+  document.getElementById(
+    "next"
+  );
 
-const submitModal = document.getElementById("submitModal");
-const cancelSubmit = document.getElementById("cancelSubmit");
-const confirmSubmit = document.getElementById("confirmSubmit");
+const toastEl =
+  document.getElementById(
+    "toast"
+  );
+
+const btnLogout =
+  document.getElementById(
+    "btnLogout"
+  );
+
+const modal =
+  document.getElementById(
+    "logoutModal"
+  );
+
+const cancelLogout =
+  document.getElementById(
+    "cancelLogout"
+  );
+
+const confirmLogout =
+  document.getElementById(
+    "confirmLogout"
+  );
+
+const submitModal =
+  document.getElementById(
+    "submitModal"
+  );
+
+const cancelSubmit =
+  document.getElementById(
+    "cancelSubmit"
+  );
+
+const confirmSubmit =
+  document.getElementById(
+    "confirmSubmit"
+  );
 
 // ================= SESSION =================
-const kodeUjian = sessionStorage.getItem("kodeUjian");
-const namaSiswa = sessionStorage.getItem("namaSiswa");
-const siswaUid = sessionStorage.getItem("siswaUid");
-const waktuMulai = sessionStorage.getItem("waktuMulai");
-const kelasSiswa = sessionStorage.getItem("kelasSiswa");
-const durasiUjian = Number(
-  sessionStorage.getItem("durasiUjian") || 30
-);
+const kodeUjian =
+  sessionStorage.getItem(
+    "kodeUjian"
+  );
 
-if (!siswaUid || !kodeUjian || !namaSiswa || !waktuMulai) {
-  alert("Sesi ujian tidak valid");
-  location.href = "login-siswa.html";
+const namaSiswa =
+  sessionStorage.getItem(
+    "namaSiswa"
+  );
+
+const siswaUid =
+  sessionStorage.getItem(
+    "siswaUid"
+  );
+
+const kelasSiswa =
+  sessionStorage.getItem(
+    "kelasSiswa"
+  );
+
+const durasiUjian =
+  Number(
+    sessionStorage.getItem(
+      "durasiUjian"
+    ) || 30
+  );
+
+// ================= VALIDASI SESSION =================
+if (
+  !siswaUid ||
+  !kodeUjian ||
+  !namaSiswa
+) {
+
+  alert(
+    "Sesi ujian tidak valid"
+  );
+
+  location.replace(
+    "token.html"
+  );
+
+  throw new Error(
+    "SESSION_INVALID"
+  );
+
 }
 
-document.getElementById("c-nama").textContent =
+// ================= WAKTU MULAI =================
+let waktuMulai =
+  sessionStorage.getItem(
+    "waktuMulai"
+  );
+
+if (!waktuMulai) {
+
+  waktuMulai =
+    Date.now();
+
+  sessionStorage.setItem(
+    "waktuMulai",
+    waktuMulai
+  );
+
+}
+
+// ================= USER =================
+document.getElementById(
+  "c-nama"
+).textContent =
   namaSiswa || "Siswa";
 
 // ================= GLOBAL =================
@@ -55,21 +157,15 @@ let jadwal = {};
 
 let mapelUjian = "";
 let judulUjian = "";
+
 let isSubmitting = false;
 let sudahDikirim = false;
 let sudahSelesai = false;
 
-let pelanggaran = 0;
-let lastPelanggaranTime = 0;
-
 let toastTimer;
-
-let jawabanSiswa = {
-  pg: {},
-  mcma: {},
-  kategori: {},
-  essay: {}
-};
+let sudahLoadSoal = false;
+let timerInterval = null;
+// ================= STORAGE =================
 const LS_JAWABAN =
   `jawaban_${siswaUid}_${kodeUjian}`;
 
@@ -82,35 +178,76 @@ const LS_SOAL =
 const LS_KIRIM =
   `kirim_${siswaUid}_${kodeUjian}`;
 
-// ================= FINAL GUARD =================
-const sudahKirim =
-  localStorage.getItem(LS_KIRIM);
-
-if (sudahKirim === "true") {
-
-  console.log(
-    "UJIAN SUDAH SELESAI"
+// ================= RESET CACHE =================
+const lastKode =
+  localStorage.getItem(
+    "last_kode_ujian"
   );
+
+if (
+  lastKode !== kodeUjian
+) {
+
+  localStorage.removeItem(
+    LS_JAWABAN
+  );
+
+  localStorage.removeItem(
+    LS_SOAL
+  );
+
+  localStorage.removeItem(
+    LS_WAKTU
+  );
+
+  localStorage.setItem(
+    "last_kode_ujian",
+    kodeUjian
+  );
+
+}
+
+// ================= FINAL GUARD =================
+if (
+  localStorage.getItem(
+    LS_KIRIM
+  ) === "true"
+) {
 
   location.replace(
     "selesai.html"
   );
 
-  return;
 }
+
+// ================= JAWABAN =================
+let jawabanSiswa = {
+  pg: {},
+  mcma: {},
+  kategori: {},
+  essay: {}
+};
+
 // ================= TOAST =================
 function toast(msg) {
 
-  clearTimeout(toastTimer);
+  clearTimeout(
+    toastTimer
+  );
 
-  toastEl.textContent = msg;
-  toastEl.style.display = "block";
+  toastEl.textContent =
+    msg;
 
-  toastTimer = setTimeout(() => {
+  toastEl.style.display =
+    "block";
 
-    toastEl.style.display = "none";
+  toastTimer =
+    setTimeout(() => {
 
-  }, 3000);
+      toastEl.style.display =
+        "none";
+
+    }, 3000);
 
 }
 
@@ -119,12 +256,20 @@ function shuffle(arr) {
 
   const a = [...arr];
 
-  for (let i = a.length - 1; i > 0; i--) {
+  for (
+    let i = a.length - 1;
+    i > 0;
+    i--
+  ) {
 
     const j =
-      Math.floor(Math.random() * (i + 1));
+      Math.floor(
+        Math.random() * (i + 1)
+      );
 
-    [a[i], a[j]] = [a[j], a[i]];
+    [a[i], a[j]] =
+      [a[j], a[i]];
+
   }
 
   return a;
@@ -134,217 +279,263 @@ function shuffle(arr) {
 // ================= SIMPAN JAWABAN =================
 function simpanJawaban() {
 
-  const soal = semuaSoal[indexSoal];
+  const soal =
+    semuaSoal[indexSoal];
 
   if (!soal) return;
 
   // ================= PG =================
   if (soal.tipe === "pg") {
 
-    const pilih = document.querySelector(
-      `input[name="soal_${soal.id}"]:checked`
-    );
+    const pilih =
+      document.querySelector(
+        `input[name="soal_${soal.id}"]:checked`
+      );
 
     if (pilih) {
 
-      jawabanSiswa.pg[soal.id] =
+      jawabanSiswa.pg[
+        soal.id
+      ] =
         pilih.dataset.key;
 
     }
 
   }
 
-  // ================= MCMA =================
-  if (soal.tipe === "mcma") {
+// ================= MCMA =================
 
-    const checked = document.querySelectorAll(
+  if (soal.tipe === "mcma") {
+   const checked =
+    document.querySelectorAll(
       `input[name="soal_${soal.id}"]:checked`
     );
 
-    jawabanSiswa.mcma[soal.id] =
-      Array.from(checked)
-      .map(cb => cb.value);
+  jawabanSiswa.mcma[
+    soal.id
+  ] =
+    Array.from(checked)
+    .map(cb => cb.value);
 
-  }
+}
 
-  // ================= KATEGORI =================
-  if (soal.tipe === "kategori") {
+// ================= KATEGORI =================
+if (soal.tipe === "kategori") {
 
-    const hasil = [];
+  const hasil = [];
 
-    document
-      .querySelectorAll(
-        `[data-kat="${soal.id}"]`
-      )
-      .forEach((row) => {
+  document
+    .querySelectorAll(
+      `[data-kat="${soal.id}"]`
+    )
+    .forEach((row) => {
 
-        const pilih =
-          row.querySelector(
-            "input:checked"
-          );
-
-        hasil.push(
-          pilih
-            ? pilih.value === "true"
-            : null
+      const pilih =
+        row.querySelector(
+          "input:checked"
         );
 
-      });
+      hasil.push(
+        pilih
+          ? pilih.value === "true"
+          : null
+      );
 
-    jawabanSiswa.kategori[soal.id] =
-      hasil;
+    });
 
-  }
+  jawabanSiswa.kategori[
+    soal.id
+  ] = hasil;
+
+}
 
   // ================= ESSAY =================
   if (soal.tipe === "essay") {
 
-    const textarea = document.querySelector(
-      `textarea[name="soal_${soal.id}"]`
-    );
+    const textarea =
+      document.querySelector(
+        `textarea[name="soal_${soal.id}"]`
+      );
 
-    jawabanSiswa.essay[soal.id] =
-      textarea?.value.trim() || "";
+    jawabanSiswa.essay[
+      soal.id
+    ] =
+      textarea?.value.trim()
+      || "";
 
   }
 
-  // ================= LOCAL SAVE =================
   localStorage.setItem(
     LS_JAWABAN,
-    JSON.stringify(jawabanSiswa)
+    JSON.stringify(
+      jawabanSiswa
+    )
   );
 
 }
 
-// ================= HITUNG NILAI =================
 function hitungNilai() {
 
-  let skor = 0;
-  let total = 0;
+  let totalSkor = 0;
+  let totalMaks = 0;
 
   semuaSoal.forEach((soal) => {
 
-    // ================= BATASI TIPE =================
-    if (
-      !["pg", "mcma", "kategori"]
-      .includes(soal.tipe)
-    ) return;
+    // =====================================
+    // HANYA SOAL YANG DINILAI
+    // =====================================
+    const tipeValid = [
+      "pg",
+      "mcma",
+      "kategori"
+    ];
 
-    total += 2;
+    if (!tipeValid.includes(soal.tipe)) {
+      return;
+    }
 
-    // ================= PG =================
+    // tiap soal maksimal 2 poin
+    totalMaks += 2;
+
+    // =====================================
+    // PILIHAN GANDA
+    // =====================================
     if (soal.tipe === "pg") {
 
       const jawaban =
-        jawabanSiswa.pg?.[soal.id];
+        String(
+          jawabanSiswa.pg?.[soal.id] || ""
+        );
 
-      if (
-        String(jawaban) ===
-        String(soal.kunci)
-      ) {
+      const kunci =
+        String(soal.kunci || "");
 
-        skor += 2;
+      if (jawaban === kunci) {
+        totalSkor += 2;
+      }
+
+    }
+
+    // =====================================
+    // MCMA
+    // =====================================
+    else if (soal.tipe === "mcma") {
+
+      const kunci =
+        Array.isArray(soal.kunci)
+          ? soal.kunci
+          : [];
+
+      const jawaban =
+        Array.isArray(
+          jawabanSiswa.mcma?.[soal.id]
+        )
+          ? jawabanSiswa.mcma[soal.id]
+          : [];
+
+      // jika tidak ada kunci
+      if (kunci.length > 0) {
+
+        let benar = 0;
+        let salah = 0;
+
+        jawaban.forEach((j) => {
+
+          if (kunci.includes(j)) {
+            benar++;
+          } else {
+            salah++;
+          }
+
+        });
+
+        // =============================
+        // SKOR BERSIH
+        // =============================
+        let skorBersih =
+          benar - salah;
+
+        // minimal 0
+        skorBersih =
+          Math.max(0, skorBersih);
+
+        // maksimal jumlah kunci
+        skorBersih =
+          Math.min(
+            skorBersih,
+            kunci.length
+          );
+
+        // konversi ke 2 poin
+        const nilaiMcma =
+          (skorBersih / kunci.length) * 2;
+
+        totalSkor += nilaiMcma;
 
       }
 
     }
 
-    // ================= MCMA =================
-    if (soal.tipe === "mcma") {
-
-      const kunci =
-        Array.isArray(soal.kunci)
-        ? soal.kunci
-        : [];
-
-      const jawab =
-        Array.isArray(
-          jawabanSiswa.mcma?.[soal.id]
-        )
-        ? jawabanSiswa.mcma[soal.id]
-        : [];
-
-      // jika tidak ada kunci
-      if (kunci.length === 0) return;
-
-      let benar = 0;
-
-      jawab.forEach((j) => {
-
-        if (kunci.includes(j)) {
-          benar++;
-        }
-
-      });
-
-      // maksimal benar = jumlah kunci
-      benar = Math.min(
-        benar,
-        kunci.length
-      );
-
-      const nilaiMcma =
-        (benar / kunci.length) * 2;
-
-      skor += nilaiMcma;
-
-    }
-
-    // ================= KATEGORI =================
-    if (soal.tipe === "kategori") {
+    // =====================================
+    // KATEGORI
+    // =====================================
+    else if (soal.tipe === "kategori") {
 
       const pernyataan =
-        Array.isArray(
-          soal.pernyataan
-        )
-        ? soal.pernyataan
-        : [];
+        Array.isArray(soal.pernyataan)
+          ? soal.pernyataan
+          : [];
 
-      const jawab =
+      const jawaban =
         Array.isArray(
           jawabanSiswa.kategori?.[soal.id]
         )
-        ? jawabanSiswa.kategori[soal.id]
-        : [];
+          ? jawabanSiswa.kategori[soal.id]
+          : [];
 
-      // cegah division by zero
-      if (pernyataan.length === 0)
-        return;
+      if (pernyataan.length > 0) {
 
-      let benar = 0;
+        let benar = 0;
 
-      pernyataan.forEach((p, i) => {
+        pernyataan.forEach((p, i) => {
 
-        if (
-          String(jawab[i]) ===
-          String(p.jawabanBenar)
-        ) {
+          if (
+            String(jawaban[i]) ===
+            String(p.jawabanBenar)
+          ) {
+            benar++;
+          }
 
-          benar++;
+        });
 
-        }
+        const nilaiKategori =
+          (benar / pernyataan.length) * 2;
 
-      });
+        totalSkor += nilaiKategori;
 
-      const nilaiKategori =
-        (benar / pernyataan.length)
-        * 2;
-
-      skor += nilaiKategori;
+      }
 
     }
 
   });
 
-  // ================= NORMALISASI =================
-  skor =
-    Number(skor.toFixed(2));
+  // =====================================
+  // PEMBULATAN SKOR
+  // =====================================
+  totalSkor =
+    Number(totalSkor.toFixed(2));
 
+  // =====================================
+  // NILAI AKHIR
+  // =====================================
   const nilaiAkhir =
-    total > 0
-    ? (skor / total) * 100
-    : 0;
+    totalMaks > 0
+      ? (totalSkor / totalMaks) * 100
+      : 0;
 
+  // =====================================
+  // RETURN
+  // =====================================
   return {
 
     nilaiPG:
@@ -355,7 +546,12 @@ function hitungNilai() {
     nilaiEssay: 0,
 
     totalNilai:
-      Math.round(nilaiAkhir)
+      Math.round(nilaiAkhir),
+
+    // tambahan info
+    totalSkor,
+
+    totalMaks
 
   };
 
@@ -364,10 +560,8 @@ function hitungNilai() {
 // ================= TAMPILKAN SOAL =================
 function tampilkanSoal() {
 
-  // ================= VALIDASI =================
   if (
-    !Array.isArray(semuaSoal) ||
-    semuaSoal.length === 0
+    !semuaSoal.length
   ) {
 
     soalContainer.innerHTML =
@@ -377,28 +571,8 @@ function tampilkanSoal() {
 
   }
 
-  // ================= CEGAH INDEX ERROR =================
-  if (
-    indexSoal < 0 ||
-    indexSoal >= semuaSoal.length
-  ) {
-
-    indexSoal = 0;
-
-  }
-
   const soal =
     semuaSoal[indexSoal];
-
-  // ================= VALIDASI SOAL =================
-  if (!soal) {
-
-    soalContainer.innerHTML =
-      "<p>Soal tidak ditemukan</p>";
-
-    return;
-
-  }
 
   noSoalEl.textContent =
     indexSoal + 1;
@@ -407,16 +581,22 @@ function tampilkanSoal() {
     <div class="soal-item">
 
       <div class="soal-text">
-        ${DOMPurify.sanitize(
-          soal.pertanyaan || ""
-        )}
+        ${
+          DOMPurify.sanitize(
+            soal.pertanyaan || ""
+          )
+        }
       </div>
   `;
 
   // ================= PG =================
-  if (soal.tipe === "pg") {
+  if (
+    soal.tipe === "pg"
+  ) {
 
-    html += `<div class="opsi">`;
+    html += `
+      <div class="opsi">
+    `;
 
     (soal.opsi || [])
     .forEach(([key, teks]) => {
@@ -428,18 +608,22 @@ function tampilkanSoal() {
             type="radio"
             name="soal_${soal.id}"
             data-key="${key}"
+
             ${
-              jawabanSiswa.pg?.[soal.id]
-              === key
-                ? "checked"
-                : ""
+              jawabanSiswa.pg[
+                soal.id
+              ] === key
+              ? "checked"
+              : ""
             }
           >
 
           <span>
-            ${DOMPurify.sanitize(
-              teks || ""
-            )}
+            ${
+              DOMPurify.sanitize(
+                teks || ""
+              )
+            }
           </span>
 
         </label>
@@ -447,139 +631,163 @@ function tampilkanSoal() {
 
     });
 
-    html += `</div>`;
+    html += `
+      </div>
+    `;
+
   }
 
   // ================= MCMA =================
-  if (soal.tipe === "mcma") {
+if (
+  soal.tipe === "mcma"
+) {
 
-    html += `<div class="opsi">`;
+  html += `
+    <div class="opsi">
+  `;
 
-    (soal.opsi || [])
-    .forEach(([key, teks]) => {
+  (soal.opsi || [])
+  .forEach(([key, teks]) => {
 
-      html += `
-        <label>
+    html += `
+      <label>
 
+        <input
+          type="checkbox"
+          name="soal_${soal.id}"
+          value="${key}"
+
+          ${
+            jawabanSiswa.mcma?.[
+              soal.id
+            ]?.includes(key)
+              ? "checked"
+              : ""
+          }
+        >
+
+        <span>
+          ${
+            DOMPurify.sanitize(
+              teks || ""
+            )
+          }
+        </span>
+
+      </label>
+    `;
+
+  });
+
+  html += `
+    </div>
+  `;
+
+}
+
+// ================= KATEGORI =================
+if (
+  soal.tipe === "kategori"
+) {
+
+  html += `
+    <table class="kategori-table">
+
+      <thead>
+        <tr>
+          <th>Pernyataan</th>
+          <th>Benar</th>
+          <th>Salah</th>
+        </tr>
+      </thead>
+
+      <tbody>
+  `;
+
+  (soal.pernyataan || [])
+  .forEach((p, i) => {
+
+    const jawab =
+      jawabanSiswa.kategori?.[
+        soal.id
+      ]?.[i];
+
+    html += `
+      <tr data-kat="${soal.id}">
+
+        <td>
+          ${
+            DOMPurify.sanitize(
+              p.teks || ""
+            )
+          }
+        </td>
+
+        <td>
           <input
-            type="checkbox"
-            name="soal_${soal.id}"
-            value="${key}"
+            type="radio"
+            name="kat_${soal.id}_${i}"
+            value="true"
 
             ${
-              jawabanSiswa.mcma?.[
-                soal.id
-              ]?.includes(key)
+              jawab === true
                 ? "checked"
                 : ""
             }
           >
+        </td>
 
-          <span>
-            ${DOMPurify.sanitize(
-              teks || ""
-            )}
-          </span>
+        <td>
+          <input
+            type="radio"
+            name="kat_${soal.id}_${i}"
+            value="false"
 
-        </label>
-      `;
+            ${
+              jawab === false
+                ? "checked"
+                : ""
+            }
+          >
+        </td>
 
-    });
-
-    html += `</div>`;
-  }
-
-  // ================= KATEGORI =================
-  if (soal.tipe === "kategori") {
-
-    html += `
-      <table class="kategori-table">
-
-        <thead>
-          <tr>
-            <th>Pernyataan</th>
-            <th>Benar</th>
-            <th>Salah</th>
-          </tr>
-        </thead>
-
-        <tbody>
+      </tr>
     `;
 
-    (soal.pernyataan || [])
-    .forEach((p, i) => {
+  });
 
-      const jawab =
-        jawabanSiswa.kategori?.[
-          soal.id
-        ]?.[i];
+  html += `
+      </tbody>
 
-html += `
-  <tr data-kat="${soal.id}">
+    </table>
+  `;
 
-    <td>
-      ${DOMPurify.sanitize(
-        p.teks || ""
-      )}
-    </td>
-
-    <td>
-      <input
-        type="radio"
-        name="kat_${soal.id}_${i}"
-        value="true"
-        ${
-          jawab === true
-            ? "checked"
-            : ""
-        }
-      >
-    </td>
-
-    <td>
-      <input
-        type="radio"
-        name="kat_${soal.id}_${i}"
-        value="false"
-        ${
-          jawab === false
-            ? "checked"
-            : ""
-        }
-      >
-    </td>
-
-  </tr>
-`;
-
-    });
-
-    html += `
-        </tbody>
-
-      </table>
-    `;
-  }
+}
 
   // ================= ESSAY =================
-  if (soal.tipe === "essay") {
+  if (
+    soal.tipe === "essay"
+  ) {
 
     html += `
       <textarea
         name="soal_${soal.id}"
         rows="5"
       >${
-        jawabanSiswa.essay?.[
+        jawabanSiswa.essay[
           soal.id
         ] || ""
       }</textarea>
     `;
+
   }
 
-  html += `</div>`;
+  html += `
+    </div>
+  `;
 
-  // ================= RENDER =================
-  soalContainer.innerHTML = html;
+  soalContainer.innerHTML =
+    html;
 
   // ================= MATHJAX =================
   if (
@@ -590,8 +798,10 @@ html += `
 
     requestAnimationFrame(() => {
 
-      MathJax.typesetPromise()
-      .catch(err => console.log(err));
+      MathJax.typesetPromise([
+        soalContainer
+      ])
+      .catch(console.error);
 
     });
 
@@ -602,13 +812,21 @@ html += `
     indexSoal === 0;
 
   btnNext.textContent =
-    indexSoal === semuaSoal.length - 1
+    indexSoal ===
+    semuaSoal.length - 1
       ? "Kirim"
       : "Selanjutnya";
 
 }
+
 // ================= LOAD SOAL =================
 async function loadSoal() {
+
+  if (
+    sudahLoadSoal
+  ) return;
+
+  sudahLoadSoal = true;
 
   soalContainer.innerHTML =
     "<p>Memuat soal...</p>";
@@ -625,7 +843,9 @@ async function loadSoal() {
         )
       );
 
-    if (!jadwalSnap.exists()) {
+    if (
+      !jadwalSnap.exists()
+    ) {
 
       soalContainer.innerHTML =
         "<p>Jadwal tidak ditemukan</p>";
@@ -634,7 +854,8 @@ async function loadSoal() {
 
     }
 
-    jadwal = jadwalSnap.data();
+    jadwal =
+      jadwalSnap.data();
 
     mapelUjian =
       jadwal.mapel || "";
@@ -642,7 +863,7 @@ async function loadSoal() {
     judulUjian =
       jadwal.judul || "";
 
-    // ================= BANK SOAL =================
+    // ================= BANK =================
     const bankSnap =
       await getDoc(
         doc(
@@ -652,7 +873,9 @@ async function loadSoal() {
         )
       );
 
-    if (!bankSnap.exists()) {
+    if (
+      !bankSnap.exists()
+    ) {
 
       soalContainer.innerHTML =
         "<p>Bank soal tidak ditemukan</p>";
@@ -662,7 +885,7 @@ async function loadSoal() {
     }
 
     const bank =
-  bankSnap.data() || {};
+      bankSnap.data() || {};
 
     let id = 0;
 
@@ -686,64 +909,71 @@ async function loadSoal() {
 
         kunci:
           s.jawabanBenar
-          || s.kunci
-
+          || s.kunci,
+         skor: s.skor || 2
       }));
 
-    const soalMCMA =
-      (bank.soalMCMA || [])
-      .map((s) => ({
+const soalMCMA =
+  (bank.soalMCMA || [])
+  .map((s) => ({
 
-        tipe: "mcma",
+    tipe: "mcma",
 
-        id: id++,
+    id: id++,
 
-        pertanyaan:
-          s.pertanyaan,
+    pertanyaan:
+      s.pertanyaan,
 
-        opsi:
-          shuffle(
-            Object.entries(
-              s.opsi || {}
-            )
-          ),
+    opsi:
+      shuffle(
+        Object.entries(
+          s.opsi || {}
+        )
+      ),
 
-        kunci:
-          s.jawabanBenar
-          || []
+    kunci:
+      s.jawabanBenar
+      || [],
+    skor: s.skor || 2
+  }));
+    const soalKategori = (bank.soalKategori || []).map(s => ({
+      tipe: "kategori",
+      id: id++,
+      pertanyaan: (s.pertanyaan),
+      pernyataan: shuffle(
+        (s.pernyataan || []).map((p, i) => ({
+          ...p,
+          originalIndex: i
+        }))
+      ),
+      skor: s.skor || 2
+    }));
 
-      }));
+   const soalEssay = (bank.soalEssay || []).map(s => ({
+      tipe: "essay",
+      id: id++,
+      pertanyaan: (s.pertanyaan),
+      skorMax: s.skorMax || 20
+    }));
+ 
+    const cacheUrutan = localStorage.getItem(LS_SOAL);
 
-    const soalKategori =
-      (bank.soalKategori || [])
-      .map((s) => ({
+    if (cacheUrutan) {
+      semuaSoal = JSON.parse(cacheUrutan);
+    } else {
+      const soalObjektif = shuffle([
+        ...soalPG,
+        ...soalMCMA,
+        ...soalKategori
+      ]);
 
-        tipe: "kategori",
+      semuaSoal = [...soalObjektif, ...soalEssay];
 
-        id: id++,
+      localStorage.setItem(LS_SOAL, JSON.stringify(semuaSoal));
+    }
 
-        pertanyaan:
-          s.pertanyaan,
 
-        pernyataan:
-          s.pernyataan || []
-
-      }));
-
-    const soalEssay =
-      (bank.soalEssay || [])
-      .map((s) => ({
-
-        tipe: "essay",
-
-        id: id++,
-
-        pertanyaan:
-          s.pertanyaan
-
-      }));
-
-    // ================= CACHE SOAL =================
+    // ================= CACHE =================
     const cacheSoal =
       localStorage.getItem(
         LS_SOAL
@@ -751,45 +981,88 @@ async function loadSoal() {
 
     if (cacheSoal) {
 
-      semuaSoal =
-        JSON.parse(cacheSoal);
+      try {
 
-    } else {
+        semuaSoal =
+          JSON.parse(
+            cacheSoal
+          );
+
+      } catch {
+
+        semuaSoal = [];
+
+        localStorage.removeItem(
+          LS_SOAL
+        );
+
+      }
+
+    }
+
+    // ================= GENERATE =================
+    if (
+      !semuaSoal.length
+    ) {
+
 semuaSoal = [
-  ...shuffle(soalPG),
-  ...shuffle(soalMCMA),
-  ...shuffle(soalKategori),
+
+  ...shuffle(
+    soalPG
+  ),
+
+  ...shuffle(
+    soalMCMA
+  ),
+
+  ...shuffle(
+    soalKategori
+  ),
+
   ...soalEssay
+
 ];
 
       localStorage.setItem(
         LS_SOAL,
-        JSON.stringify(semuaSoal)
+        JSON.stringify(
+          semuaSoal
+        )
       );
 
     }
 
     // ================= CACHE JAWABAN =================
-    const cacheJawaban = 
-    localStorage.getItem(
+    const cacheJawaban =
+      localStorage.getItem(
         LS_JAWABAN
       );
-      if (cacheJawaban) {
-        try {
-          jawabanSiswa =
-          JSON.parse(cacheJawaban);
-        } 
-        catch {
-          jawabanSiswa = {
-           pg: {},
-           mcma: {},
-           kategori: {},
+
+    if (cacheJawaban) {
+
+      try {
+
+        jawabanSiswa =
+          JSON.parse(
+            cacheJawaban
+          );
+
+      } catch {
+
+        jawabanSiswa = {
+          pg: {},
+          mcma: {},
+          kategori: {},
           essay: {}
-          };
-        }
+        };
+
       }
 
+    }
+
     tampilkanSoal();
+
+    mulaiTimer();
 
   } catch (err) {
 
@@ -805,15 +1078,21 @@ semuaSoal = [
 // ================= NEXT =================
 btnNext.onclick = () => {
 
+  if (
+    !semuaSoal.length
+  ) return;
+
   simpanJawaban();
 
-  // ================= TERAKHIR =================
+  // ================= KIRIM =================
   if (
     indexSoal ===
     semuaSoal.length - 1
   ) {
 
-    submitModal.classList.add("show");
+    submitModal.classList.add(
+      "show"
+    );
 
     return;
 
@@ -830,7 +1109,9 @@ btnPrev.onclick = () => {
 
   simpanJawaban();
 
-  if (indexSoal > 0) {
+  if (
+    indexSoal > 0
+  ) {
 
     indexSoal--;
 
@@ -840,145 +1121,138 @@ btnPrev.onclick = () => {
 
 };
 
-
 // ================= TIMER =================
-let waktuCache =
-  localStorage.getItem(LS_WAKTU);
+function mulaiTimer() {
 
-let waktu =
-  waktuCache !== null
+  let waktuCache =
+    localStorage.getItem(
+      LS_WAKTU
+    );
+
+  let waktu =
+    waktuCache !== null
     ? Number(waktuCache)
     : durasiUjian * 60;
 
-if (isNaN(waktu)) {
+  if (
+    isNaN(waktu)
+  ) {
 
-  waktu = durasiUjian * 60;
+    waktu =
+      durasiUjian * 60;
+
+  }
+
+  clearInterval(timerInterval);
+  timerInterval =
+  setInterval(() => {
+
+      const menit =
+        Math.floor(
+          waktu / 60
+        );
+
+      const detik =
+        waktu % 60;
+
+      timerEl.textContent =
+        `${String(menit).padStart(2,"0")}:${String(detik).padStart(2,"0")}`;
+
+      localStorage.setItem(
+        LS_WAKTU,
+        waktu
+      );
+
+      // ================= HABIS =================
+      if (waktu <= 0) {
+
+        clearInterval(timerInterval);
+
+        timerEl.textContent =
+          "00:00";
+
+        if (
+          !sudahDikirim
+        ) {
+
+          toast(
+            "Waktu habis"
+          );
+
+          simpanJawaban();
+
+          simpanJawabanFirestore();
+
+        }
+
+        return;
+
+      }
+
+      waktu--;
+
+    }, 1000);
 
 }
 
-let timer = setInterval(() => {
-
-  const menit =
-    Math.floor(waktu / 60);
-
-  const detik =
-    waktu % 60;
-
-  timerEl.textContent =
-    `${String(menit).padStart(2, "0")}:${String(detik).padStart(2, "0")}`;
-
-  localStorage.setItem(
-    LS_WAKTU,
-    waktu
-  );
-
-  // ================= HABIS =================
-if (waktu <= 0) {
-
-  clearInterval(timer);
-
-  waktu = 0;
-  timerEl.textContent = "00:00";
-
-  if (!sudahDikirim) {
-
-    toast("Waktu habis, jawaban dikirim");
-
-    simpanJawaban();
-    simpanJawabanFirestore();
-
-  }
-
-  return;
-
-  }
-
-  waktu--;
-
-}, 1000);
-
-// ================= SIMPAN FINAL =================
+// ================= SIMPAN FIRESTORE =================
 async function simpanJawabanFirestore() {
-  
-  if (sudahDikirim || isSubmitting) return;
+
+  if (
+    sudahDikirim ||
+    isSubmitting
+  ) return;
 
   isSubmitting = true;
   sudahDikirim = true;
   sudahSelesai = true;
-  clearInterval(timer);
-
-  btnNext.disabled = true;
-  btnPrev.disabled = true;
-
-  const nilai =
-    hitungNilai();
-
+const nilai = hitungNilai();
   try {
 
-    await setDoc(
-      doc(
-        db,
-        "jawaban_siswa",
-        `${siswaUid}_${kodeUjian}`
-      ),
-      {
-        siswaUid,
-        namaSiswa,
+    await setDoc(doc(db, "jawaban_siswa", `${siswaUid}_${kodeUjian}`),{
 
-        kelas:
-          kelasSiswa,
+      siswaUid,
+      namaSiswa,
+      kelas: kelasSiswa,
+      mapel: mapelUjian,
 
-        mapel:
-          mapelUjian,
+      guruId: jadwal.guruId || "",
+      bankSoalId: jadwal.bankSoalId || "",
 
-        judulUjian,
+      judulUjian: judulUjian,
 
-        guruId:
-          jadwal.guruId || "",
+      jawabanPG: jawabanSiswa.pg,
+      jawabanMCMA: jawabanSiswa.mcma,
+      jawabanKategori: jawabanSiswa.kategori,
+      jawabanEssay: jawabanSiswa.essay,
 
-        bankSoalId:
-          jadwal.bankSoalId || "",
+      nilaiPG: nilai.nilaiPG,
+      nilaiEssay: nilai.nilaiEssay,
+      totalNilai: nilai.totalNilai,
 
-        jawabanPG:
-          jawabanSiswa.pg,
+      statusNilai: "belum",
 
-        jawabanMCMA:
-          jawabanSiswa.mcma,
+      waktu_mulai: waktuMulai,
+      waktu_selesai: serverTimestamp()
 
-        jawabanKategori:
-          jawabanSiswa.kategori,
-
-        jawabanEssay:
-          jawabanSiswa.essay,
-
-        nilaiPG:
-          nilai.nilaiPG,
-
-        nilaiEssay:
-          nilai.nilaiEssay,
-
-        totalNilai:
-          nilai.totalNilai,
-
-        statusNilai:
-          "belum",
-
-        waktu_mulai:
-          waktuMulai,
-
-        waktu_selesai:
-          serverTimestamp()
       }
     );
 
     // ================= UPDATE PESERTA =================
-    await updateDoc(
-      doc(db, "peserta", siswaUid),
+    await setDoc(
+      doc(
+        db,
+        "peserta",
+        siswaUid
+      ),
       {
-        status: "selesai",
+        status:
+          "selesai",
+
         lastOnline:
           serverTimestamp()
-      }
+      },
+      { merge: true }
     );
 
     // ================= STORAGE =================
@@ -1003,10 +1277,12 @@ async function simpanJawabanFirestore() {
       "Jawaban berhasil dikirim"
     );
 
-   setTimeout(() => {
-    location.replace(
-    "selesai.html"
-    );
+    setTimeout(() => {
+
+      location.replace(
+        "selesai.html"
+      );
+
     }, 1500);
 
   } catch (err) {
@@ -1020,9 +1296,6 @@ async function simpanJawabanFirestore() {
     sudahDikirim = false;
     sudahSelesai = false;
 
-    btnNext.disabled = false;
-    btnPrev.disabled = false;
-
   }
 
 }
@@ -1030,15 +1303,20 @@ async function simpanJawabanFirestore() {
 // ================= SUBMIT =================
 cancelSubmit.onclick = () => {
 
-  submitModal.classList.remove("show");
+  submitModal.classList.remove(
+    "show"
+  );
 
 };
 
 confirmSubmit.onclick = () => {
 
-  submitModal.classList.remove("show");
+  submitModal.classList.remove(
+    "show"
+  );
 
   simpanJawaban();
+
   simpanJawabanFirestore();
 
 };
@@ -1046,174 +1324,65 @@ confirmSubmit.onclick = () => {
 // ================= LOGOUT =================
 btnLogout.onclick = () => {
 
-  modal.classList.add("show");
+  modal.classList.add(
+    "show"
+  );
 
 };
 
 cancelLogout.onclick = () => {
 
-  modal.classList.remove("show");
+  modal.classList.remove(
+    "show"
+  );
 
 };
 
-confirmLogout.onclick = async () => {
+confirmLogout.onclick =
+  async () => {
 
-  simpanJawaban();
-
-  await setDoc(
-    doc(db, "peserta", siswaUid),
-    {
-      status: "keluar",
-      lastOnline:
-        serverTimestamp()
-    },
-    { merge: true }
-  );
-
-  sessionStorage.clear();
-
-  location.href =
-    "../login-siswa.html";
-
-};
-
-// ================= PELANGGARAN =================
-async function tambahPelanggaran(pesan) {
-
-  const now = Date.now();
-
-  if (
-    now - lastPelanggaranTime < 3000
-  ) return;
-
-  lastPelanggaranTime = now;
-
-  pelanggaran++;
-
-  toast(pesan);
-
-await setDoc(
-  doc(db, "peserta", siswaUid),
-  {
-    jumlahPelanggaran:
-      pelanggaran,
-
-    lastOnline:
-      serverTimestamp()
-  },
-  { merge: true }
-);
-
-if (
-  pelanggaran >= 3 &&
-  !sudahDikirim
-) {
-
-  toast(
-    "Pelanggaran terlalu banyak"
-  );
-
-}
-
-}
-
-// ================= ONLINE STATUS =================
-setInterval(async () => {
-
-  if (
-    sudahSelesai ||
-    !navigator.onLine
-  ) return;
-
-  try {
+    simpanJawaban();
 
     await setDoc(
-      doc(db, "peserta", siswaUid),
+      doc(
+        db,
+        "peserta",
+        siswaUid
+      ),
       {
-        status: "mengerjakan",
+        status:
+          "keluar",
+
         lastOnline:
           serverTimestamp()
       },
       { merge: true }
     );
 
-  } catch (err) {
+    sessionStorage.clear();
 
-    console.log(err);
-
-  }
-
-}, 120000);
-
-// ================= BLOK AKSI =================
-document.addEventListener(
-  "contextmenu",
-  (e) => e.preventDefault()
-);
-
-document.addEventListener(
-  "copy",
-  (e) => e.preventDefault()
-);
-// ================= OFFLINE =================
-window.addEventListener(
-  "offline",
-  () => {
-
-    toast(
-      "Koneksi internet terputus"
+    location.replace(
+      "../login-siswa.html"
     );
 
-  }
-);
+};
 
+// ================= BEFORE UNLOAD =================
 window.addEventListener(
-  "online",
-  () => {
-
-    toast(
-      "Koneksi internet tersambung"
-    );
-
-  }
-);
-// ================= TAB CHANGE =================
-let hiddenTimer;
-
-document.addEventListener(
-  "visibilitychange",
+  "beforeunload",
   () => {
 
     if (
-      document.hidden &&
-      navigator.onLine
+      !sudahSelesai &&
+      !isSubmitting
     ) {
 
-      hiddenTimer = setTimeout(() => {
-
-        tambahPelanggaran(
-          "Jangan keluar dari halaman ujian"
-        );
-
-      }, 5000);
-
-    } else {
-
-      clearTimeout(hiddenTimer);
+      simpanJawaban();
 
     }
 
   }
 );
-
-// ================= BEFORE UNLOAD =================
-window.addEventListener("beforeunload", (e) => {
-
-  if (!sudahSelesai && !isSubmitting) {
-    simpanJawaban(); // ONLY LOCAL SAVE
-  }
-
-});
 
 // ================= INIT =================
 loadSoal();

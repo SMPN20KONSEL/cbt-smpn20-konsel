@@ -4,7 +4,8 @@ from "./firebase.js";
 import {
   doc,
   getDoc,
-  setDoc
+  setDoc,
+  serverTimestamp
 }
 from "https://www.gstatic.com/firebasejs/12.8.0/firebase-firestore.js";
 
@@ -16,11 +17,13 @@ from "https://www.gstatic.com/firebasejs/12.8.0/firebase-auth.js";
 /* =============================
    GLOBAL USER
 ============================= */
+
 let currentUser = null;
 
 /* =============================
    ELEMENT
 ============================= */
+
 const tokenInput =
   document.getElementById(
     "token"
@@ -37,21 +40,38 @@ const btnMasuk =
   );
 
 /* =============================
+   ERROR
+============================= */
+
+function showError(msg) {
+
+  if (!errorDiv) return;
+
+  errorDiv.textContent = msg;
+
+}
+
+/* =============================
    AUTH CHECK
 ============================= */
+
 onAuthStateChanged(
   auth,
   (user) => {
 
     if (!user) {
 
-      location.href =
-        "login.html";
+      location.replace(
+        "../login.html"
+      );
 
       return;
+
     }
 
     currentUser = user;
+
+    /* SESSION UID */
 
     sessionStorage.setItem(
       "siswaUid",
@@ -64,63 +84,95 @@ onAuthStateChanged(
 /* =============================
    VERIFY TOKEN
 ============================= */
+
 async function verifyToken() {
+
+  /* =============================
+     OFFLINE
+  ============================= */
 
   if (!navigator.onLine) {
 
-    errorDiv.textContent =
-      "Koneksi internet terputus";
+    showError(
+      "Koneksi internet terputus"
+    );
 
     return;
 
   }
 
-  // lanjut cek token...
+  /* =============================
+     BUTTON TIDAK ADA
+  ============================= */
 
-  /* BUTTON TIDAK ADA */
   if (!btnMasuk) return;
 
-  /* CEGAH DOUBLE CLICK */
+  /* =============================
+     DOUBLE CLICK
+  ============================= */
+
   if (btnMasuk.disabled)
     return;
 
-  /* CLEAR ERROR */
-  errorDiv.textContent = "";
+  /* =============================
+     CLEAR ERROR
+  ============================= */
 
-  /* VALIDASI LOGIN */
+  showError("");
+
+  /* =============================
+     VALIDASI LOGIN
+  ============================= */
+
   if (!currentUser) {
 
-    errorDiv.textContent =
-      "Sesi belum siap.";
+    showError(
+      "Sesi login belum siap"
+    );
 
     return;
+
   }
 
-  /* AMBIL TOKEN */
+  /* =============================
+     AMBIL TOKEN
+  ============================= */
+
   const token =
     tokenInput.value
       .trim()
       .toUpperCase();
 
-  /* VALIDASI TOKEN */
+  /* =============================
+     VALIDASI TOKEN
+  ============================= */
+
   if (!token) {
 
-    errorDiv.textContent =
-      "Token wajib diisi.";
+    showError(
+      "Token wajib diisi"
+    );
 
     return;
+
   }
 
   try {
 
-    /* LOADING */
+    /* =============================
+       LOADING
+    ============================= */
+
     btnMasuk.disabled =
       true;
 
     btnMasuk.innerHTML =
       "⏳ Memeriksa...";
 
-    /* CEK TOKEN */
+    /* =============================
+       CEK TOKEN
+    ============================= */
+
     const snap =
       await getDoc(
         doc(
@@ -130,49 +182,59 @@ async function verifyToken() {
         )
       );
 
-    /* TOKEN TIDAK ADA */
+    /* =============================
+       TOKEN TIDAK ADA
+    ============================= */
+
     if (!snap.exists()) {
 
-      errorDiv.textContent =
-        "Token tidak ditemukan.";
+      showError(
+        "Token tidak ditemukan"
+      );
 
       return;
+
     }
 
     const ujian =
       snap.data();
 
-    /* CEK STATUS UJIAN */
+    /* =============================
+       CEK STATUS
+    ============================= */
+
     if (
       ujian.aktif !== true
     ) {
 
-      errorDiv.textContent =
-        "Ujian belum aktif.";
+      showError(
+        "Ujian belum aktif"
+      );
 
       return;
+
     }
 
-    /* SIMPAN PESERTA
-       NON BLOCKING
-    */
-    setDoc(
-      doc(
-        db,
-        "peserta",
-        currentUser.uid
-      ),
-      {
-        kodeUjian:
-          token,
+    /* =============================
+       VALIDASI BANK SOAL
+    ============================= */
 
-        status:
-          "belum_mulai"
-      },
-      { merge: true }
-    ).catch(console.error);
+    if (
+      !ujian.bankSoalId
+    ) {
 
-    /* SESSION */
+      showError(
+        "Bank soal belum tersedia"
+      );
+
+      return;
+
+    }
+
+    /* =============================
+       SESSION UJIAN
+    ============================= */
+
     sessionStorage.setItem(
       "kodeUjian",
       token
@@ -185,7 +247,7 @@ async function verifyToken() {
 
     sessionStorage.setItem(
       "durasiUjian",
-      ujian.durasi || 0
+      ujian.durasi || 30
     );
 
     sessionStorage.setItem(
@@ -198,16 +260,54 @@ async function verifyToken() {
       ujian.judul || ""
     );
 
-    /* MASUK UJIAN */
-    location.href =
-      "ujian.html";
+    /* PENTING */
+
+    sessionStorage.setItem(
+      "waktuMulai",
+      Date.now()
+    );
+
+    /* =============================
+       TRACK PESERTA
+    ============================= */
+
+    await setDoc(
+      doc(
+        db,
+        "peserta",
+        currentUser.uid
+      ),
+      {
+        kodeUjian:
+          token,
+
+        status:
+          "mengerjakan",
+
+        mulaiAt:
+          serverTimestamp(),
+
+        lastOnline:
+          serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    /* =============================
+       MASUK UJIAN
+    ============================= */
+
+    location.replace(
+      "ujian.html"
+    );
 
   } catch (err) {
 
     console.error(err);
 
-    errorDiv.textContent =
-      "Koneksi bermasalah.";
+    showError(
+      "Koneksi bermasalah"
+    );
 
   } finally {
 
@@ -224,12 +324,14 @@ async function verifyToken() {
 /* =============================
    BUTTON
 ============================= */
+
 window.verifyToken =
   verifyToken;
 
 /* =============================
    ENTER TOKEN
 ============================= */
+
 tokenInput?.addEventListener(
   "keydown",
   (e) => {
@@ -239,6 +341,21 @@ tokenInput?.addEventListener(
       verifyToken();
 
     }
+
+  }
+);
+
+/* =============================
+   OFFLINE
+============================= */
+
+window.addEventListener(
+  "offline",
+  () => {
+
+    showError(
+      "Koneksi internet terputus"
+    );
 
   }
 );
